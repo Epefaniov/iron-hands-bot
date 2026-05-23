@@ -2,15 +2,12 @@
   "name": "discord-bot",
   "version": "2.2.1",
   "description": "",
-  "main": "index.js",
+  "main": "index-ironhands.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index-ironhands.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "discord.js": "^14.25.1"
-  }
+  "type": "commonjs"
 }
