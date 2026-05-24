@@ -22,6 +22,7 @@ const client = new Client({
 const XP_FILE = path.join(__dirname, 'xp.json');
 const PROMOTION_FILE = path.join(__dirname, 'promotions.json');
 const AAR_LOG_FILE = path.join(__dirname, 'aar_log.json');
+const ARMORY_FILE = path.join(__dirname, 'armory.json');
 const pendingSpecialtyApplications = new Set();
 
 // CHANNEL IDS
@@ -45,6 +46,10 @@ const UNIFORM_CHANNELS = {
   'Captain': '1469391890444189920',
   'High Command': UNIFORM_CHANNEL_ID
 };
+
+const PRIMARCH_ROLE_ID = '1461160231802376520';
+const TECHMARINE_ROLE_ID = '1460141834352197737';
+const IRON_FATHER_ROLE_ID = '1459230489830363348';
 
 // ⚙️ IRON HANDS HIGH COMMAND
 const HIGH_COMMAND_ROLE_IDS = [
@@ -322,17 +327,24 @@ const ARMORY_CATEGORIES = [
 ];
 
 const armorySubmissionCache = new Map();
-const armoryInventory = new Map();
-let armoryItemCounter = 1;
 
-function generateArmoryItemId() {
-  return `armory_${String(armoryItemCounter++).padStart(3, '0')}`;
+function isPrimarch(member) {
+  return member?.roles?.cache?.has(PRIMARCH_ROLE_ID);
+}
+
+function isForgeStaff(member) {
+  if (!member) return false;
+
+  return (
+    member.roles.cache.has(PRIMARCH_ROLE_ID) ||
+    member.roles.cache.has(TECHMARINE_ROLE_ID) ||
+    member.roles.cache.has(IRON_FATHER_ROLE_ID)
+  );
 }
 
 function isArmoryManager(member) {
-  return hasCommandAuthority(member) || Boolean(getCurrentSpecialty(member)?.key === 'armoury');
+  return isForgeStaff(member);
 }
-
 function getArmorySubmission(userId) {
   return armorySubmissionCache.get(userId) || null;
 }
@@ -374,8 +386,8 @@ function saveArmoryItem(submission, approvedBy) {
     createdAt: Date.now()
   };
 
-  armoryInventory.set(itemId, item);
-  return item;
+ setArmoryItem(item);
+return item;
 }
 
 function buildArmoryReviewEmbed(submission, member) {
@@ -431,7 +443,7 @@ function buildArmoryShopRow(itemId) {
   );
 }
 
-// ================= XP SYSTEM =================
+// ================= XP / ARMORY DATA SYSTEM =================
 
 function loadXP() {
   if (!fs.existsSync(XP_FILE)) {
@@ -444,48 +456,95 @@ function saveXP(data) {
   fs.writeFileSync(XP_FILE, JSON.stringify(data, null, 2));
 }
 
+function ensureUserRecord(data, userId) {
+  if (!data[userId]) {
+    data[userId] = {
+      points: 0,
+      armoryData: 0
+    };
+  }
+
+  if (typeof data[userId].points !== 'number') {
+    data[userId].points = 0;
+  }
+
+  if (typeof data[userId].armoryData !== 'number') {
+    data[userId].armoryData = 0;
+  }
+
+  return data[userId];
+}
+
+// AAR POINTS
 function getUserXP(userId) {
   const data = loadXP();
-  return data[userId]?.points || 0;
+  return ensureUserRecord(data, userId).points;
 }
 
 function addUserXP(userId, amount) {
   const data = loadXP();
+  const record = ensureUserRecord(data, userId);
 
-  if (!data[userId]) {
-    data[userId] = { points: 0 };
-  }
-
-  data[userId].points += amount;
+  record.points += amount;
   saveXP(data);
 
-  return data[userId].points;
+  return record.points;
 }
 
 function setUserXP(userId, amount) {
   const data = loadXP();
+  const record = ensureUserRecord(data, userId);
 
-  if (!data[userId]) {
-    data[userId] = { points: 0 };
-  }
-
-  data[userId].points = amount;
+  record.points = Math.max(0, amount);
   saveXP(data);
 
-  return data[userId].points;
+  return record.points;
 }
 
 function removeUserXP(userId, amount) {
   const data = loadXP();
+  const record = ensureUserRecord(data, userId);
 
-  if (!data[userId]) {
-    data[userId] = { points: 0 };
-  }
-
-  data[userId].points = Math.max(0, data[userId].points - amount);
+  record.points = Math.max(0, record.points - amount);
   saveXP(data);
 
-  return data[userId].points;
+  return record.points;
+}
+
+// ARMORY DATA
+function getUserArmoryData(userId) {
+  const data = loadXP();
+  return ensureUserRecord(data, userId).armoryData;
+}
+
+function addUserArmoryData(userId, amount) {
+  const data = loadXP();
+  const record = ensureUserRecord(data, userId);
+
+  record.armoryData += amount;
+  saveXP(data);
+
+  return record.armoryData;
+}
+
+function setUserArmoryData(userId, amount) {
+  const data = loadXP();
+  const record = ensureUserRecord(data, userId);
+
+  record.armoryData = Math.max(0, amount);
+  saveXP(data);
+
+  return record.armoryData;
+}
+
+function removeUserArmoryData(userId, amount) {
+  const data = loadXP();
+  const record = ensureUserRecord(data, userId);
+
+  record.armoryData = Math.max(0, record.armoryData - amount);
+  saveXP(data);
+
+  return record.armoryData;
 }
 
 // ================= PROMOTION STORAGE =================
@@ -921,6 +980,44 @@ function buildAdminHelpRow() {
     new ButtonBuilder()
       .setCustomId('help_trials')
       .setLabel('Trial Tools')
+      .setStyle(ButtonStyle.Secondary)
+  );
+}
+
+function buildArmoryDataRewardRow(messageId) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`armorydata:green:${messageId}`)
+      .setLabel('Mastercraft +0.25')
+      .setStyle(ButtonStyle.Success),
+
+    new ButtonBuilder()
+      .setCustomId(`armorydata:purple:${messageId}`)
+      .setLabel('Artificer +0.5')
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId(`armorydata:gold:${messageId}`)
+      .setLabel('Gold')
+      .setStyle(ButtonStyle.Secondary)
+  );
+}
+
+function buildGoldArmoryDataRow(messageId) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`armorydata:gold1:${messageId}`)
+      .setLabel('Relic Ruthless +1')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId(`armorydata:gold2:${messageId}`)
+      .setLabel('Relic Lethal +1.5')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId(`armorydata:gold3:${messageId}`)
+      .setLabel('Relic Absolute +2')
       .setStyle(ButtonStyle.Secondary)
   );
 }
@@ -1400,6 +1497,7 @@ function getMentionedRoleNames(message) {
 
   for (const roleId of rawRoleIds) {
     const role = message.guild.roles.cache.get(roleId);
+
     if (role) {
       roleNames.add(role.name.toLowerCase());
     }
@@ -1415,37 +1513,28 @@ function getAARData(message) {
   const hasRole = name => roleNames.includes(name.toLowerCase());
   const hasText = value => text.includes(value.toLowerCase());
 
-  const hasOperationStyle =
-    hasText('pve operation') ||
-    hasText('mission type') ||
-    hasText('operation') ||
-    hasText('mission') ||
-    hasRole('pve');
+  const victoryRequired =
+    hasText('victory') ||
+    hasText('status: victory') ||
+    hasText('successful') ||
+    hasText('success');
 
-  const hasSiegeStyle =
+  const hasGeneSeed =
+    hasText('gene-seed: yes') ||
+    hasText('gene seed: yes') ||
+    hasText('gene-seed: true') ||
+    hasText('gene seed: true') ||
+    hasRole('gene-seed') ||
+    hasRole('gene seed');
+
+  // ================= PvE Siege =================
+  if (
     hasText('pve siege') ||
+    hasText('waves:') ||
     hasText('waves') ||
     hasRole('normal siege mode') ||
-    hasRole('hard siege mode') ||
-    hasText('normal siege mode') ||
-    hasText('hard siege mode');
-
-  const hasStratagemStyle =
-    hasText('pve stratagem') ||
-    hasRole('normal stratagem') ||
-    hasRole('hard stratagem') ||
-    hasText('normal stratagem') ||
-    hasText('hard stratagem');
-
-  const hasPvpStyle =
-    hasText('pvp eternal war') ||
-    hasText('gamemode') ||
-    hasText('status') ||
-    hasRole('victory') ||
-    hasRole('defeat') ||
-    hasRole('pvp');
-
-  if (hasSiegeStyle) {
+    hasRole('hard siege mode')
+  ) {
     const waveMatch =
       text.match(/waves\s*:\s*(\d+)/i) ||
       text.match(/waves\s*(\d+)/i) ||
@@ -1456,9 +1545,17 @@ function getAARData(message) {
 
     let points = 0;
 
-    if (hasRole('hard siege mode') || hasText('hard siege mode')) {
+    if (
+      hasRole('hard siege mode') ||
+      hasText('difficulty: hard') ||
+      hasText('hard')
+    ) {
       points = setsOfFive * 2;
-    } else if (hasRole('normal siege mode') || hasText('normal siege mode')) {
+    } else if (
+      hasRole('normal siege mode') ||
+      hasText('difficulty: normal') ||
+      hasText('normal')
+    ) {
       points = setsOfFive * 1;
     }
 
@@ -1468,13 +1565,34 @@ function getAARData(message) {
     };
   }
 
-  if (hasStratagemStyle) {
+  // ================= PvE Stratagem =================
+  if (
+    hasText('pve stratagem') ||
+    hasRole('normal strat') ||
+    hasRole('hard strat') ||
+    hasRole('normal stratagem') ||
+    hasRole('hard stratagem')
+  ) {
     let points = 0;
 
-    if (hasRole('hard stratagem') || hasText('hard stratagem')) {
+    if (
+      hasRole('hard strat') ||
+      hasRole('hard stratagem') ||
+      hasText('difficulty: hard') ||
+      hasText('hard strat')
+    ) {
       points = 4;
-    } else if (hasRole('normal stratagem') || hasText('normal stratagem')) {
+    } else if (
+      hasRole('normal strat') ||
+      hasRole('normal stratagem') ||
+      hasText('difficulty: normal') ||
+      hasText('normal strat')
+    ) {
       points = 2;
+    }
+
+    if (victoryRequired && hasGeneSeed) {
+      points += 1;
     }
 
     return {
@@ -1483,12 +1601,26 @@ function getAARData(message) {
     };
   }
 
-  if (hasPvpStyle) {
+  // ================= PvP Eternal War =================
+  if (
+    hasText('pvp eternal war') ||
+    hasText('gamemode:') ||
+    hasRole('pvp victory') ||
+    hasRole('pvp defeat')
+  ) {
     let points = 0;
 
-    if (hasRole('victory') || hasText('status: victory') || hasText('victory')) {
+    if (
+      hasRole('pvp victory') ||
+      hasText('status: victory') ||
+      hasText('victory')
+    ) {
       points = 2;
-    } else if (hasRole('defeat') || hasText('status: defeat') || hasText('defeat')) {
+    } else if (
+      hasRole('pvp defeat') ||
+      hasText('status: defeat') ||
+      hasText('defeat')
+    ) {
       points = 1;
     }
 
@@ -1498,20 +1630,44 @@ function getAARData(message) {
     };
   }
 
-  if (hasOperationStyle) {
+  // ================= PvE Operation =================
+  if (
+    hasText('pve operation') ||
+    hasText('operation:') ||
+    hasRole('absolute') ||
+    hasRole('lethal') ||
+    hasRole('ruthless')
+  ) {
     let points = 0;
 
-    if (hasRole('absolute') || hasText('absolute')) {
+    if (
+      hasRole('absolute') ||
+      hasText('difficulty: absolute') ||
+      hasText('absolute')
+    ) {
       points = 3;
-    } else if (hasRole('lethal') || hasText('lethal')) {
+    } else if (
+      hasRole('lethal') ||
+      hasText('difficulty: lethal') ||
+      hasText('lethal')
+    ) {
       points = 2;
     } else if (
       hasRole('ruthless') ||
       hasRole('substantial') ||
+      hasRole('average') ||
+      hasRole('minimal') ||
+      hasText('difficulty: ruthless') ||
       hasText('ruthless') ||
-      hasText('substantial')
+      hasText('substantial') ||
+      hasText('average') ||
+      hasText('minimal')
     ) {
       points = 1;
+    }
+
+    if (victoryRequired && hasGeneSeed) {
+      points += 1;
     }
 
     return {
@@ -1620,16 +1776,116 @@ client.on(Events.GuildMemberAdd, member => {
   );
 });
 
+// ================= ARMORY STORAGE =================
+function loadArmoryInventory() {
+  if (!fs.existsSync(ARMORY_FILE)) {
+    fs.writeFileSync(ARMORY_FILE, JSON.stringify({
+      counter: 1,
+      items: {}
+    }, null, 2));
+  }
+
+  return JSON.parse(fs.readFileSync(ARMORY_FILE, 'utf8'));
+}
+
+function saveArmoryInventory(data) {
+  fs.writeFileSync(ARMORY_FILE, JSON.stringify(data, null, 2));
+}
+
+function getArmoryItem(itemId) {
+  const data = loadArmoryInventory();
+  return data.items[itemId] || null;
+}
+
+function setArmoryItem(item) {
+  const data = loadArmoryInventory();
+  data.items[item.itemId] = item;
+  saveArmoryInventory(data);
+}
+
+function generateArmoryItemId() {
+  const data = loadArmoryInventory();
+  const itemId = `armory_${String(data.counter).padStart(3, '0')}`;
+  data.counter += 1;
+  saveArmoryInventory(data);
+  return itemId;
+}
+
 // ================= INTERACTIONS =================
 
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isButton()) return;
 
+// ================= ARMORY DATA REWARD BUTTONS =================
+if (interaction.customId.startsWith('armorydata:')) {
+  if (!hasCommandAuthority(interaction.member)) {
+    return interaction.reply({
+      content: '⚠️ Only authorized officers may confirm Armory Data rewards.',
+      ephemeral: true
+    });
+  }
+
+  const [, type, aarMessageId] = interaction.customId.split(':');
+
+  if (type === 'gold') {
+    return interaction.reply({
+      content: '⚙️ Select the Gold Armory Data value recovered.',
+      components: [buildGoldArmoryDataRow(aarMessageId)],
+      ephemeral: true
+    });
+  }
+
+  let amount = 0;
+
+if (type === 'green') amount = 0.25;
+if (type === 'purple') amount = 0.5;
+
+if (type === 'gold1') amount = 1;
+if (type === 'gold2') amount = 1.5;
+if (type === 'gold3') amount = 2;
+
+  if (amount <= 0) {
+    return interaction.reply({
+      content: '⚠️ Invalid Armory Data value.',
+      ephemeral: true
+    });
+  }
+
+  const aarChannel = interaction.guild.channels.cache.get(AAR_CHANNEL_ID);
+  const aarMessage = await aarChannel.messages.fetch(aarMessageId).catch(() => null);
+
+  if (!aarMessage) {
+    return interaction.reply({
+      content: '⚠️ Could not find the original AAR message.',
+      ephemeral: true
+    });
+  }
+
+  const creditedMembers = getCreditedMembers(aarMessage);
+
+  for (const member of creditedMembers) {
+    addUserArmoryData(member.id, amount);
+  }
+
+  const disabledRows = buildDisabledRowsFromMessage(interaction.message);
+
+  await interaction.message.edit({
+    components: disabledRows
+  }).catch(() => null);
+
+  return interaction.reply({
+    content:
+      `⚙️ **Armory Data Logged**\n` +
+      `Awarded **${amount} Armory Data** to **${creditedMembers.length}** battle brother(s).`,
+    ephemeral: true
+  });
+}
+
 // ================= ARMORY SHOP SYSTEM =================
 if (interaction.customId === 'armory_add_item') {
   if (!isArmoryManager(interaction.member)) {
     return interaction.reply({
-      content: '⚠️ Only Techmarines, High Command, Captains, or Lieutenants may forge armory items.',
+      content: '⚠️ Only Techmarines, Iron Fathers, or the Primarch may forge armory items.',
       ephemeral: true
     });
   }
@@ -1722,7 +1978,7 @@ if (
       });
 
       item.shopMessageId = shopMessage.id;
-      armoryInventory.set(item.itemId, item);
+      setArmoryItem(item);	
     }
 
     const forgeChannel = interaction.guild.channels.cache.get(FORGE_CHANNEL_ID);
@@ -1762,7 +2018,7 @@ if (interaction.customId.startsWith('armory_buy:')) {
   }
 
   const [, itemId] = parts;
-  const item = armoryInventory.get(itemId);
+  const item = getArmoryItem(itemId);
 
   if (!item || !item.active) {
     return interaction.reply({
@@ -1778,7 +2034,7 @@ if (interaction.customId.startsWith('armory_buy:')) {
     });
   }
 
-  const currentBalance = getUserXP(interaction.user.id);
+  const currentBalance = getUserArmoryData(interaction.user.id);
 
   if (currentBalance < item.price) {
     return interaction.reply({
@@ -1791,14 +2047,14 @@ if (interaction.customId.startsWith('armory_buy:')) {
   }
 
   // COMPLETE PURCHASE
-  removeUserXP(interaction.user.id, item.price);
+  removeUserArmoryData(interaction.user.id, item.price);
   item.stock -= 1;
 
   if (item.stock <= 0) {
     item.active = false;
   }
 
-  armoryInventory.set(itemId, item);
+  setArmoryItem(item);
 
   // LOG TO FORGE CHANNEL
   const forgeChannel = interaction.guild.channels.cache.get(FORGE_CHANNEL_ID);
@@ -1839,7 +2095,7 @@ if (interaction.customId.startsWith('armory_buy:')) {
 
 // ================= ARMORY BALANCE =================
 if (interaction.customId.startsWith('armory_balance')) {
-  const currentBalance = getUserXP(interaction.user.id);
+  const currentBalance = getUserArmoryData(interaction.user.id);
 
   return interaction.reply({
     content:
@@ -1848,6 +2104,7 @@ if (interaction.customId.startsWith('armory_balance')) {
     ephemeral: true
   });
 }
+
 // ================= SPECIALTY APPLICATION SYSTEM =================
 const specialty = SPECIALTY_CONFIG.specialties.find(
   spec => spec.buttonId === interaction.customId
@@ -3150,12 +3407,21 @@ if (message.content === '!armorypanel') {
   return message.reply('✅ Armory Forge panel deployed and pinned.');
 }
 
+// ================= ARMORY DATA CHECK =================
+if (message.content === '!armorydata') {
+  const balance = getUserArmoryData(message.author.id);
+
+  return message.reply(
+    `⚙️ **Armory Data Reserve**\nYou currently possess **${balance} Armory Data**.`
+  );
+}
+
   if (message.content === '!ping') {
     return message.reply('Pong!');
   }
 
-  if (message.content === '!thirst') {
-    const randomLore = thirstLore[Math.floor(Math.random() * thirstLore.length)];
+  if (message.content === '!flesh') {
+    const randomLore = thirstLore[Math.floor(Math.random() * fleshLore.length)];
     return message.reply(randomLore);
   }
 
@@ -3376,13 +3642,20 @@ if (
   const creditedList = creditedMembers.map(member => `${member}`).join(', ');
   const aarType = aarData.type;
 
-  return message.reply(
-    `📜 **AAR Logged**\n` +
-    `**Type:** ${aarType}\n` +
-    `**Points Awarded:** ${earnedPoints}\n` +
-    `**Credited Brothers:** ${creditedList}`
-  );
-}
+await message.reply(
+  `📜 **AAR Logged**\n` +
+  `**Type:** ${aarType}\n` +
+  `**Points Awarded:** ${earnedPoints}\n` +
+  `**Credited Brothers:** ${creditedList}`
+);
+
+return message.reply({
+  content:
+    `⚙️ **Armory Data Recovery Check**\n` +
+    `Select the Armory Data recovered from this mission.`,
+  components: [buildArmoryDataRewardRow(message.id)]
+});
+
   // ================= SYNC ALL RANKS =================
   if (message.content === '!syncallranks') {
     if (!hasCommandAuthority(message.member)) {
@@ -4265,6 +4538,39 @@ if (message.content === '!specialtypanel') {
   return message.reply('✅ Specialty panel deployed and pinned.');
 }
 
-});
+// ================= XP ADJUSTMENT =================
+if (message.content.startsWith('!adjustxp')) {
+
+  if (!hasCommandAuthority(message.member)) {
+    return message.reply('⚠️ You are not authorized to adjust progression points.');
+  }
+
+  const args = message.content.split(' ');
+  const target = message.mentions.members.first();
+  const amount = parseFloat(args[2]);
+
+  if (!target || isNaN(amount)) {
+    return message.reply(
+      '⚠️ Usage: `!adjustxp @user amount`'
+    );
+  }
+
+  const oldXP = getUserXP(target.id);
+  const newXP = addUserXP(target.id, amount);
+
+  await handleRankThresholdChange(
+    message.guild,
+    target,
+    getRank(oldXP).name,
+    oldXP,
+    newXP
+  );
+
+  return message.reply(
+    `⚙️ Adjusted ${target}'s progression by ${amount} points.\n` +
+    `New Total: ${newXP}`
+  );
+}
+
 
 client.login(process.env.TOKEN);
