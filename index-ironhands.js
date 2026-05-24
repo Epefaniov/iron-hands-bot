@@ -4566,11 +4566,12 @@ if (message.content.startsWith('!adjustxp')) {
     newXP
   );
 
-  return message.reply(
+return message.reply(
     `⚙️ Adjusted ${target}'s progression by ${amount} points.\n` +
     `New Total: ${newXP}`
   );
 }
 
 });
+
 client.login(process.env.TOKEN);
