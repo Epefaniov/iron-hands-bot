@@ -4572,5 +4572,5 @@ if (message.content.startsWith('!adjustxp')) {
   );
 }
 
-
+});
 client.login(process.env.TOKEN);
