@@ -5,7 +5,8 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder
+  EmbedBuilder,
+  MessageFlags
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
@@ -51,9 +52,9 @@ const PRIMARCH_ROLE_ID = '1461160231802376520';
 const TECHMARINE_ROLE_ID = '1460141834352197737';
 const IRON_FATHER_ROLE_ID = '1459230489830363348';
 
-// ⚙️ IRON HANDS HIGH COMMAND
+// IRON HANDS HIGH COMMAND
 const HIGH_COMMAND_ROLE_IDS = [
-  '1461160231802376520', 
+  '1461160231802376520',
   '1460293116241379369',
   '1459245485050040360',
   '1499162882913599529',
@@ -61,22 +62,21 @@ const HIGH_COMMAND_ROLE_IDS = [
   '1499162830081884291',
   '1459344450667937962',
   '1459230489830363348',
-  '1459252226567704660'  
+  '1459252226567704660'
 ];
 const HIGH_COMMAND_CHANNEL_ID = '1459247450890961110';
 
-// ⚙️ IRON HANDS OFFICER COMMAND
+// IRON HANDS OFFICER COMMAND
 const LIEUTENANT_ROLE_IDS = [
-  '1460380127979634798' // Iron Hands Lieutenant
+  '1460380127979634798'
 ];
 
-// ⚙️ IRON HANDS CAPTAIN COMMAND
+// IRON HANDS CAPTAIN COMMAND
 const CAPTAIN_ROLE_IDS = [
-  '1459252226567704660' // Iron Captain
+  '1459252226567704660'
 ];
 
-// Rank ID'S
-// LT is Above all of this Shit
+// Rank IDs
 const RANK_ROLE_IDS = {
   'Neophyte': '1459230095968305379',
   'Battle Brother': '1459229587207753728',
@@ -138,7 +138,6 @@ const SPECIALTY_CONFIG = {
   ]
 };
 
-
 // ENVOY
 const ENVOY_ROLE_ID = '1459293889931247841';
 
@@ -146,7 +145,7 @@ const ENVOY_ROLE_ID = '1459293889931247841';
 const MIN_AAR_LENGTH = 40;
 const FIRETEAM_CHOICE_THRESHOLD = 60;
 
-// ===== PATH KEYS =====
+// PATH KEYS
 const PATH_KEYS = {
   FIRETEAM: 'fireteam',
   CHAMPION: 'champion',
@@ -159,8 +158,8 @@ const PATH_LABELS = {
   [PATH_KEYS.ANCIENT]: 'Company Ancient Trials'
 };
 
-// ===== TITLE / TRIAL SETTINGS =====
-const CHAPTER_TRIAL_AAR_CHANNEL_ID = '1499832902589092011'; // 
+// TITLE / TRIAL SETTINGS
+const CHAPTER_TRIAL_AAR_CHANNEL_ID = '1499832902589092011';
 const COMPANY_CHAMPION_ROLE_ID = '1459252641967378664';
 const COMPANY_ANCIENT_ROLE_ID = '1474572937532018858';
 
@@ -288,11 +287,10 @@ const progressionRankData = rankData.filter(rank =>
   APPROVAL_RANKS.includes(rank.name)
 );
 
-// ================= ARMORY SHOP DATA =================
+// ARMORY SHOP DATA
 const ARMORY_CHANNEL_ID = '1480648419260370984';
 const FORGE_CHANNEL_ID = '1496163178994733106';
 const IRON_HANDS_ROLE_ID = '1499878459759919154';
-
 
 function buildArmoryForgeRow() {
   return new ActionRowBuilder().addComponents(
@@ -308,7 +306,7 @@ const armoryDropMessages = [
   'The forge has completed its rite. The Machine Spirit awakens. Claim it before depletion.',
   'A sacred construct has been bound to steel. Requisition is now authorized.',
   'The forge burns eternal. A new instrument of war stands ready for acquisition.',
-  'By the Omnissiah’s will, a relic has been forged. Only the worthy shall claim it.'
+  'By the Omnissiah\'s will, a relic has been forged. Only the worthy shall claim it.'
 ];
 
 function getRandomArmoryDropMessage() {
@@ -334,7 +332,6 @@ function isPrimarch(member) {
 
 function isForgeStaff(member) {
   if (!member) return false;
-
   return (
     member.roles.cache.has(PRIMARCH_ROLE_ID) ||
     member.roles.cache.has(TECHMARINE_ROLE_ID) ||
@@ -345,6 +342,7 @@ function isForgeStaff(member) {
 function isArmoryManager(member) {
   return isForgeStaff(member);
 }
+
 function getArmorySubmission(userId) {
   return armorySubmissionCache.get(userId) || null;
 }
@@ -364,14 +362,12 @@ function createArmorySubmission(userId) {
     step: 'awaiting_image',
     createdAt: Date.now()
   };
-
   armorySubmissionCache.set(userId, submission);
   return submission;
 }
 
 function saveArmoryItem(submission, approvedBy) {
   const itemId = generateArmoryItemId();
-
   const item = {
     itemId,
     itemName: submission.itemName,
@@ -385,9 +381,8 @@ function saveArmoryItem(submission, approvedBy) {
     shopMessageId: null,
     createdAt: Date.now()
   };
-
- setArmoryItem(item);
-return item;
+  setArmoryItem(item);
+  return item;
 }
 
 function buildArmoryReviewEmbed(submission, member) {
@@ -421,7 +416,6 @@ function buildArmoryReviewRow(userId) {
       .setCustomId(`armory_approve:${userId}`)
       .setLabel('Approve')
       .setStyle(ButtonStyle.Success),
-
     new ButtonBuilder()
       .setCustomId(`armory_cancel:${userId}`)
       .setLabel('Cancel')
@@ -435,7 +429,6 @@ function buildArmoryShopRow(itemId) {
       .setCustomId(`armory_buy:${itemId}`)
       .setLabel('Purchase')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId(`armory_balance:${itemId}`)
       .setLabel('View Balance')
@@ -443,7 +436,7 @@ function buildArmoryShopRow(itemId) {
   );
 }
 
-// ================= XP / ARMORY DATA SYSTEM =================
+// XP / ARMORY DATA SYSTEM
 
 function loadXP() {
   if (!fs.existsSync(XP_FILE)) {
@@ -458,24 +451,13 @@ function saveXP(data) {
 
 function ensureUserRecord(data, userId) {
   if (!data[userId]) {
-    data[userId] = {
-      points: 0,
-      armoryData: 0
-    };
+    data[userId] = { points: 0, armoryData: 0 };
   }
-
-  if (typeof data[userId].points !== 'number') {
-    data[userId].points = 0;
-  }
-
-  if (typeof data[userId].armoryData !== 'number') {
-    data[userId].armoryData = 0;
-  }
-
+  if (typeof data[userId].points !== 'number') data[userId].points = 0;
+  if (typeof data[userId].armoryData !== 'number') data[userId].armoryData = 0;
   return data[userId];
 }
 
-// AAR POINTS
 function getUserXP(userId) {
   const data = loadXP();
   return ensureUserRecord(data, userId).points;
@@ -484,34 +466,27 @@ function getUserXP(userId) {
 function addUserXP(userId, amount) {
   const data = loadXP();
   const record = ensureUserRecord(data, userId);
-
   record.points += amount;
   saveXP(data);
-
   return record.points;
 }
 
 function setUserXP(userId, amount) {
   const data = loadXP();
   const record = ensureUserRecord(data, userId);
-
   record.points = Math.max(0, amount);
   saveXP(data);
-
   return record.points;
 }
 
 function removeUserXP(userId, amount) {
   const data = loadXP();
   const record = ensureUserRecord(data, userId);
-
   record.points = Math.max(0, record.points - amount);
   saveXP(data);
-
   return record.points;
 }
 
-// ARMORY DATA
 function getUserArmoryData(userId) {
   const data = loadXP();
   return ensureUserRecord(data, userId).armoryData;
@@ -520,34 +495,28 @@ function getUserArmoryData(userId) {
 function addUserArmoryData(userId, amount) {
   const data = loadXP();
   const record = ensureUserRecord(data, userId);
-
   record.armoryData += amount;
   saveXP(data);
-
   return record.armoryData;
 }
 
 function setUserArmoryData(userId, amount) {
   const data = loadXP();
   const record = ensureUserRecord(data, userId);
-
   record.armoryData = Math.max(0, amount);
   saveXP(data);
-
   return record.armoryData;
 }
 
 function removeUserArmoryData(userId, amount) {
   const data = loadXP();
   const record = ensureUserRecord(data, userId);
-
   record.armoryData = Math.max(0, record.armoryData - amount);
   saveXP(data);
-
   return record.armoryData;
 }
 
-// ================= PROMOTION STORAGE =================
+// PROMOTION STORAGE
 
 function loadPromotionData() {
   if (!fs.existsSync(PROMOTION_FILE)) {
@@ -567,22 +536,18 @@ function getDefaultPromotionRecord() {
     title: null,
     pendingApprovalRank: null,
     approvalStatus: null,
-
-    // ===== Phase 1 progression-path system =====
     progressionChoiceOffered: false,
     progressionChoicePending: false,
     progressionChoiceMade: false,
-    selectedPath: null, // 'Fireteam Leader' | 'Company Champion Trials' | 'Company Ancient Trials'
-    pathStatus: null,   // 'awaiting_selection' | 'pending_review' | 'approved' | 'denied' | 'active'
-
+    selectedPath: null,
+    pathStatus: null,
     fireteamData: {
       active: false,
       approvedAt: null,
       reassessmentDue: false,
       reassessmentCount: 0,
-      sergeantReviewStatus: null // 'ready' | 'needs_more_time' | null
+      sergeantReviewStatus: null
     },
-
     trialData: {
       champion: {
         active: false,
@@ -605,16 +570,9 @@ function getDefaultPromotionRecord() {
         }
       }
     },
-
     specialRoles: {
-      'Company Ancient': {
-        status: null,
-        trialAccepted: false
-      },
-      'Company Champion': {
-        status: null,
-        trialAccepted: false
-      }
+      'Company Ancient': { status: null, trialAccepted: false },
+      'Company Champion': { status: null, trialAccepted: false }
     }
   };
 }
@@ -627,12 +585,10 @@ function getUserPromotion(userId) {
   return {
     ...defaultRecord,
     ...stored,
-
     fireteamData: {
       ...defaultRecord.fireteamData,
       ...(stored.fireteamData || {})
     },
-
     trialData: {
       ...defaultRecord.trialData,
       ...(stored.trialData || {}),
@@ -645,17 +601,12 @@ function getUserPromotion(userId) {
         ...((stored.trialData && stored.trialData.ancient) || {}),
         operations: {
           ...defaultRecord.trialData.ancient.operations,
-          ...(
-            stored.trialData &&
-            stored.trialData.ancient &&
-            stored.trialData.ancient.operations
-              ? stored.trialData.ancient.operations
-              : {}
-          )
+          ...(stored.trialData && stored.trialData.ancient && stored.trialData.ancient.operations
+            ? stored.trialData.ancient.operations
+            : {})
         }
       }
     },
-
     specialRoles: {
       ...defaultRecord.specialRoles,
       ...(stored.specialRoles || {})
@@ -688,13 +639,9 @@ function updateUserPromotion(userId, updater) {
         ...((updatedRaw.trialData && updatedRaw.trialData.ancient) || {}),
         operations: {
           ...defaultRecord.trialData.ancient.operations,
-          ...(
-            updatedRaw.trialData &&
-            updatedRaw.trialData.ancient &&
-            updatedRaw.trialData.ancient.operations
-              ? updatedRaw.trialData.ancient.operations
-              : {}
-          )
+          ...(updatedRaw.trialData && updatedRaw.trialData.ancient && updatedRaw.trialData.ancient.operations
+            ? updatedRaw.trialData.ancient.operations
+            : {})
         }
       }
     },
@@ -710,32 +657,19 @@ function updateUserPromotion(userId, updater) {
 }
 
 function setEligibleRank(userId, rank) {
-  return updateUserPromotion(userId, current => ({
-    ...current,
-    eligibleRank: rank
-  }));
+  return updateUserPromotion(userId, current => ({ ...current, eligibleRank: rank }));
 }
 
 function setOfficialRank(userId, rank) {
-  return updateUserPromotion(userId, current => ({
-    ...current,
-    officialRank: rank
-  }));
+  return updateUserPromotion(userId, current => ({ ...current, officialRank: rank }));
 }
 
 function setUserTitle(userId, title) {
-  return updateUserPromotion(userId, current => ({
-    ...current,
-    title: title || null
-  }));
+  return updateUserPromotion(userId, current => ({ ...current, title: title || null }));
 }
 
 function setApprovalState(userId, pendingApprovalRank, approvalStatus) {
-  return updateUserPromotion(userId, current => ({
-    ...current,
-    pendingApprovalRank,
-    approvalStatus
-  }));
+  return updateUserPromotion(userId, current => ({ ...current, pendingApprovalRank, approvalStatus }));
 }
 
 function clearApprovalState(userId) {
@@ -751,19 +685,13 @@ function setSpecialRoleState(userId, roleName, status, trialAccepted = false) {
     ...current,
     specialRoles: {
       ...current.specialRoles,
-      [roleName]: {
-        status,
-        trialAccepted
-      }
+      [roleName]: { status, trialAccepted }
     }
   }));
 }
 
 function setProgressionChoiceState(userId, updates) {
-  return updateUserPromotion(userId, current => ({
-    ...current,
-    ...updates
-  }));
+  return updateUserPromotion(userId, current => ({ ...current, ...updates }));
 }
 
 function resetProgressionChoiceState(userId) {
@@ -796,10 +724,7 @@ function resetProgressionChoiceState(userId) {
         active: false,
         status: null,
         cooldownUntil: null,
-        operations: {
-          Inferno: null,
-          Decapitation: null
-        }
+        operations: { Inferno: null, Decapitation: null }
       }
     }
   }));
@@ -812,13 +737,13 @@ function isInSpecialProgressionFlow(userData) {
     userData.progressionChoiceMade ||
     userData.selectedPath ||
     userData.pathStatus ||
-    userData.fireteamData?.active ||
-    userData.trialData?.champion?.active ||
-    userData.trialData?.ancient?.active
+    userData.fireteamData.active ||
+    userData.trialData.champion.active ||
+    userData.trialData.ancient.active
   );
 }
 
-// ================= PATH / BUTTON HELPERS =================
+// PATH / BUTTON HELPERS
 
 function getPathLabel(pathKey) {
   return PATH_LABELS[pathKey] || 'Unknown Path';
@@ -830,12 +755,10 @@ function buildPathChoiceRow() {
       .setCustomId(`pathselect:${PATH_KEYS.FIRETEAM}`)
       .setLabel('Fireteam Leader')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId(`pathselect:${PATH_KEYS.CHAMPION}`)
       .setLabel('Clan Champion Trials')
       .setStyle(ButtonStyle.Danger),
-
     new ButtonBuilder()
       .setCustomId(`pathselect:${PATH_KEYS.ANCIENT}`)
       .setLabel('Company Ancient Trials')
@@ -849,7 +772,6 @@ function buildHighCommandReviewRow(userId, pathKey) {
       .setCustomId(`pathreview:approve:${userId}:${pathKey}`)
       .setLabel('Approve')
       .setStyle(ButtonStyle.Success),
-
     new ButtonBuilder()
       .setCustomId(`pathreview:deny:${userId}:${pathKey}`)
       .setLabel('Deny')
@@ -863,12 +785,10 @@ function buildFireteamReassessmentRow(userId) {
       .setCustomId(`fireteamreassess:${FIRETEAM_REVIEW_PATHS.STAY}:${userId}`)
       .setLabel('Remain Fireteam Leader')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId(`fireteamreassess:${FIRETEAM_REVIEW_PATHS.CHAMPION}:${userId}`)
       .setLabel('Request Champion Trials')
       .setStyle(ButtonStyle.Danger),
-
     new ButtonBuilder()
       .setCustomId(`fireteamreassess:${FIRETEAM_REVIEW_PATHS.ANCIENT}:${userId}`)
       .setLabel('Request Ancient Trials')
@@ -882,7 +802,6 @@ function buildSergeantReviewRow(userId) {
       .setCustomId(`sergeantreview:ready:${userId}`)
       .setLabel('Ready for Sergeant')
       .setStyle(ButtonStyle.Success),
-
     new ButtonBuilder()
       .setCustomId(`sergeantreview:moretime:${userId}`)
       .setLabel('Needs More Time')
@@ -896,12 +815,10 @@ function buildChampionChallengerRow(userId) {
       .setCustomId(`champchallenger:approve:${userId}`)
       .setLabel('Approve Challenger')
       .setStyle(ButtonStyle.Success),
-
     new ButtonBuilder()
       .setCustomId(`champchallenger:deny:${userId}`)
       .setLabel('Deny Challenger')
       .setStyle(ButtonStyle.Danger),
-
     new ButtonBuilder()
       .setCustomId(`champchallenger:delay:${userId}`)
       .setLabel('Delay Challenger')
@@ -915,7 +832,6 @@ function buildChampionDuelResolutionRow(userId) {
       .setCustomId(`champduel:defender:${userId}`)
       .setLabel('Defender Retains Title')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId(`champduel:challenger:${userId}`)
       .setLabel('Challenger Becomes Champion')
@@ -929,12 +845,10 @@ function buildAncientOccupancyRow(userId) {
       .setCustomId(`ancienttitle:keep:${userId}`)
       .setLabel('Keep Current Ancient')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId(`ancienttitle:replace:${userId}`)
       .setLabel('Replace Current Ancient')
       .setStyle(ButtonStyle.Danger),
-
     new ButtonBuilder()
       .setCustomId(`ancienttitle:reserve:${userId}`)
       .setLabel('Mark as Successor / Reserve')
@@ -957,12 +871,10 @@ function buildBasicHelpRow() {
       .setCustomId('help_general')
       .setLabel('General')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId('help_progression')
       .setLabel('Progression')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId('help_specialty')
       .setLabel('Specialty')
@@ -976,7 +888,6 @@ function buildAdminHelpRow() {
       .setCustomId('help_admin')
       .setLabel('Command Tools')
       .setStyle(ButtonStyle.Danger),
-
     new ButtonBuilder()
       .setCustomId('help_trials')
       .setLabel('Trial Tools')
@@ -990,12 +901,10 @@ function buildArmoryDataRewardRow(messageId) {
       .setCustomId(`armorydata:green:${messageId}`)
       .setLabel('Mastercraft +0.25')
       .setStyle(ButtonStyle.Success),
-
     new ButtonBuilder()
       .setCustomId(`armorydata:purple:${messageId}`)
       .setLabel('Artificer +0.5')
       .setStyle(ButtonStyle.Primary),
-
     new ButtonBuilder()
       .setCustomId(`armorydata:gold:${messageId}`)
       .setLabel('Gold')
@@ -1009,12 +918,10 @@ function buildGoldArmoryDataRow(messageId) {
       .setCustomId(`armorydata:gold1:${messageId}`)
       .setLabel('Relic Ruthless +1')
       .setStyle(ButtonStyle.Secondary),
-
     new ButtonBuilder()
       .setCustomId(`armorydata:gold2:${messageId}`)
       .setLabel('Relic Lethal +1.5')
       .setStyle(ButtonStyle.Secondary),
-
     new ButtonBuilder()
       .setCustomId(`armorydata:gold3:${messageId}`)
       .setLabel('Relic Absolute +2')
@@ -1022,7 +929,7 @@ function buildGoldArmoryDataRow(messageId) {
   );
 }
 
-// ================= TRIAL / TITLE HELPERS =================
+// TRIAL / TITLE HELPERS
 
 function parseYesNo(value) {
   if (!value) return null;
@@ -1046,11 +953,7 @@ function isAncientOverseerRankValid(rankName) {
 
 function normalizeSquadList(raw) {
   if (!raw) return [];
-  return raw
-    .split(',')
-    .map(entry => entry.trim().toLowerCase())
-    .filter(Boolean)
-    .sort();
+  return raw.split(',').map(entry => entry.trim().toLowerCase()).filter(Boolean).sort();
 }
 
 function sameSquad(a, b) {
@@ -1067,14 +970,12 @@ function getCurrentRoleHolder(guild, roleId) {
   if (!guild || !roleId) return null;
   const role = guild.roles.cache.get(roleId);
   if (!role) return null;
-  const holder = role.members.first();
-  return holder || null;
+  return role.members.first() || null;
 }
 
 async function removeExclusiveRoleFromCurrentHolder(guild, roleId, excludeUserId = null) {
   const role = guild.roles.cache.get(roleId);
   if (!role) return null;
-
   const currentHolder = role.members.find(member => member.id !== excludeUserId) || null;
   if (currentHolder) {
     try {
@@ -1083,7 +984,6 @@ async function removeExclusiveRoleFromCurrentHolder(guild, roleId, excludeUserId
       console.error(`Failed removing exclusive role ${role.name} from ${currentHolder.user.tag}:`, error);
     }
   }
-
   return currentHolder;
 }
 
@@ -1091,7 +991,6 @@ async function awardExclusiveRole(member, roleId) {
   if (!member || !roleId) return;
   const guild = member.guild;
   await removeExclusiveRoleFromCurrentHolder(guild, roleId, member.id);
-
   try {
     if (!member.roles.cache.has(roleId)) {
       await member.roles.add(roleId);
@@ -1110,9 +1009,7 @@ async function notifyChampionTitleResolution(guild, member) {
 
     const generalChannel = guild.channels.cache.get(GENERAL_CHANNEL_ID);
     if (generalChannel) {
-      await generalChannel.send(
-        `⚔️ ${member} has been recognized as **Company Champion** by decree of High Command.`
-      );
+      await generalChannel.send(`⚔️ ${member} has been recognized as **Company Champion** by decree of High Command.`);
     }
 
     try {
@@ -1138,10 +1035,10 @@ async function notifyChampionTitleResolution(guild, member) {
     });
   }
 
-updateUserPromotion(member.id, current => ({
-  ...current,
-  trialData: {
-    ...current.trialData,
+  updateUserPromotion(member.id, current => ({
+    ...current,
+    trialData: {
+      ...current.trialData,
       champion: {
         ...current.trialData.champion,
         challengerStatus: 'pending',
@@ -1160,9 +1057,7 @@ async function notifyAncientTitleDecision(guild, member) {
 
     const generalChannel = guild.channels.cache.get(GENERAL_CHANNEL_ID);
     if (generalChannel) {
-      await generalChannel.send(
-        `🏛️ ${member} has been recognized as **Company Ancient** by decree of High Command.`
-      );
+      await generalChannel.send(`🏛️ ${member} has been recognized as **Company Ancient** by decree of High Command.`);
     }
 
     try {
@@ -1200,13 +1095,8 @@ function buildPromotionMessage(member, rank, points) {
     `**Description:** ${rank.description}\n\n` +
     `**Rank Expectations:** ${rank.expectations}\n`;
 
-  if (rank.note) {
-    msg += `\n**Additional Directive:** ${rank.note}\n`;
-  }
-
-  if (rank.specialNote) {
-    msg += `\n**Special Note:** ${rank.specialNote}\n`;
-  }
+  if (rank.note) msg += `\n**Additional Directive:** ${rank.note}\n`;
+  if (rank.specialNote) msg += `\n**Special Note:** ${rank.specialNote}\n`;
 
   msg +=
     `\nReport to <#${uniformChannelId}> and ensure your appearance, wargear, and bearing match the standards of your new station.\n` +
@@ -1216,7 +1106,7 @@ function buildPromotionMessage(member, rank, points) {
   return msg;
 }
 
-// ================= AAR LOG =================
+// AAR LOG
 
 function loadAARLog() {
   if (!fs.existsSync(AAR_LOG_FILE)) {
@@ -1230,10 +1120,7 @@ function saveAARLog(data) {
 }
 
 function normalizeAAR(content) {
-  return content
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
+  return content.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
 function getAARSignature(message, members) {
@@ -1249,24 +1136,17 @@ function isDuplicateAAR(signature) {
 
 function storeAAR(signature, messageId) {
   const log = loadAARLog();
-  log[signature] = {
-    messageId,
-    createdAt: new Date().toISOString()
-  };
+  log[signature] = { messageId, createdAt: new Date().toISOString() };
   saveAARLog(log);
 }
 
-// ================= RANK HELPERS =================
+// RANK HELPERS
 
 function getRank(points) {
   let current = progressionRankData[0];
-
   for (const rank of progressionRankData) {
-    if (points >= rank.minPoints) {
-      current = rank;
-    }
+    if (points >= rank.minPoints) current = rank;
   }
-
   return current;
 }
 
@@ -1284,20 +1164,12 @@ function isSpecialAppointmentRank(rankName) {
 
 function getHighestManagedRankFromMember(member) {
   const orderedDetectableRanks = [
-    'Veteran Sergeant',
-    'Sergeant',
-    'Veteran',
-    'Battle Brother',
-    'Neophyte'
+    'Veteran Sergeant', 'Sergeant', 'Veteran', 'Battle Brother', 'Neophyte'
   ];
-
   for (const rankName of orderedDetectableRanks) {
     const roleId = RANK_ROLE_IDS[rankName];
-    if (roleId && member.roles.cache.has(roleId)) {
-      return rankName;
-    }
+    if (roleId && member.roles.cache.has(roleId)) return rankName;
   }
-
   return null;
 }
 
@@ -1312,14 +1184,8 @@ async function syncMemberRankRole(member, newRankName) {
     const rolesToRemove = trackedRoleIds.filter(
       roleId => roleId && roleId !== newRoleId && member.roles.cache.has(roleId)
     );
-
-    if (rolesToRemove.length > 0) {
-      await member.roles.remove(rolesToRemove);
-    }
-
-    if (!member.roles.cache.has(newRoleId)) {
-      await member.roles.add(newRoleId);
-    }
+    if (rolesToRemove.length > 0) await member.roles.remove(rolesToRemove);
+    if (!member.roles.cache.has(newRoleId)) await member.roles.add(newRoleId);
   } catch (error) {
     console.error(`Failed to sync rank roles for ${member.user.tag}:`, error);
   }
@@ -1340,7 +1206,6 @@ async function sendFireteamChoicePrompt(guild, member, points) {
         `• **Company Ancient Trials**`,
       components: [buildPathChoiceRow()]
     });
-
     dmDelivered = true;
   } catch (error) {
     console.error(`Could not DM ${member.user.tag}:`, error);
@@ -1369,7 +1234,7 @@ async function sendFireteamChoicePrompt(guild, member, points) {
 async function handleRankThresholdChange(guild, member, oldTrackedRank, oldPoints, newPoints) {
   if (!guild || !member) return;
 
-if (hasSpecialtyRole(member)) {
+  if (hasSpecialtyRole(member)) {
     setEligibleRank(member.id, getHighestManagedRankFromMember(member) || 'Specialty');
     return;
   }
@@ -1378,36 +1243,23 @@ if (hasSpecialtyRole(member)) {
   const oldRank = getRank(oldPoints);
   const userData = getUserPromotion(member.id);
 
-  if (
-    userData.officialRank === 'High Command' ||
-    userData.eligibleRank === 'High Command'
-  ) {
-    return;
-  }
+  if (userData.officialRank === 'High Command' || userData.eligibleRank === 'High Command') return;
 
-  // ================= FIRETEAM PATH THRESHOLD =================
   const crossedFireteamChoiceThreshold =
-    oldPoints < FIRETEAM_CHOICE_THRESHOLD &&
-    newPoints >= FIRETEAM_CHOICE_THRESHOLD;
+    oldPoints < FIRETEAM_CHOICE_THRESHOLD && newPoints >= FIRETEAM_CHOICE_THRESHOLD;
 
   const alreadyInSpecialFlow = isInSpecialProgressionFlow(userData);
 
   if (crossedFireteamChoiceThreshold && !alreadyInSpecialFlow) {
-    if (newRank.name !== oldTrackedRank) {
-      setEligibleRank(member.id, newRank.name);
-    }
-
+    if (newRank.name !== oldTrackedRank) setEligibleRank(member.id, newRank.name);
     await sendFireteamChoicePrompt(guild, member, newPoints);
     return;
   }
 
-  if (newRank.name === oldTrackedRank) {
-    return;
-  }
+  if (newRank.name === oldTrackedRank) return;
 
   setEligibleRank(member.id, newRank.name);
 
-  // ================= AUTO PROMOTION (UP TO VETERAN) =================
   if (
     isAutoProgressRank(newRank.name) &&
     newPoints > oldPoints &&
@@ -1425,23 +1277,20 @@ if (hasSpecialtyRole(member)) {
 
     const channel = guild.channels.cache.get(GENERAL_CHANNEL_ID);
     if (channel) {
-      const template =
-        promotionMessages[newRank.name] ||
-        '⚔️ {user} has been elevated within the Chapter.';
+      const template = promotionMessages[newRank.name] || '⚔️ {user} has been elevated within the Chapter.';
       await channel.send(template.replace('{user}', `${member}`));
     }
 
     return;
   }
 
-  // ================= APPROVAL REQUIRED (SERGEANT+) =================
   const refreshedUserData = getUserPromotion(member.id);
   const blockApprovalBecauseInSpecialFlow =
     refreshedUserData.progressionChoiceOffered ||
     refreshedUserData.progressionChoicePending ||
     refreshedUserData.progressionChoiceMade ||
     refreshedUserData.selectedPath === 'Fireteam Leader' ||
-    refreshedUserData.fireteamData?.active;
+    refreshedUserData.fireteamData.active;
 
   if (
     isApprovalRank(newRank.name) &&
@@ -1452,7 +1301,6 @@ if (hasSpecialtyRole(member)) {
     setApprovalState(member.id, newRank.name, 'pending');
 
     const highCommandChannel = guild.channels.cache.get(HIGH_COMMAND_CHANNEL_ID);
-
     if (highCommandChannel) {
       await highCommandChannel.send(
         `⚠️ **Promotion Review Required**\n` +
@@ -1468,41 +1316,22 @@ if (hasSpecialtyRole(member)) {
 
 function hasCommandAuthority(member) {
   if (!member) return false;
-
-  const hasHighCommandRole = HIGH_COMMAND_ROLE_IDS.some(roleId =>
-    member.roles.cache.has(roleId)
-  );
-
-  const hasLieutenantRole = LIEUTENANT_ROLE_IDS.some(roleId =>
-    member.roles.cache.has(roleId)
-  );
-
-  const hasCaptainRole = CAPTAIN_ROLE_IDS.some(roleId =>
-    member.roles.cache.has(roleId)
-  );
-
+  const hasHighCommandRole = HIGH_COMMAND_ROLE_IDS.some(roleId => member.roles.cache.has(roleId));
+  const hasLieutenantRole = LIEUTENANT_ROLE_IDS.some(roleId => member.roles.cache.has(roleId));
+  const hasCaptainRole = CAPTAIN_ROLE_IDS.some(roleId => member.roles.cache.has(roleId));
   return hasHighCommandRole || hasLieutenantRole || hasCaptainRole;
 }
 
-// ================= AAR POINT CALCULATION =================
+// AAR POINT CALCULATION
 
 function getMentionedRoleNames(message) {
   const roleNames = new Set();
-
-  message.mentions.roles.forEach(role => {
-    roleNames.add(role.name.toLowerCase());
-  });
-
+  message.mentions.roles.forEach(role => roleNames.add(role.name.toLowerCase()));
   const rawRoleIds = [...message.content.matchAll(/<@&(\d+)>/g)].map(match => match[1]);
-
   for (const roleId of rawRoleIds) {
     const role = message.guild.roles.cache.get(roleId);
-
-    if (role) {
-      roleNames.add(role.name.toLowerCase());
-    }
+    if (role) roleNames.add(role.name.toLowerCase());
   }
-
   return [...roleNames];
 }
 
@@ -1514,235 +1343,114 @@ function getAARData(message) {
   const hasText = value => text.includes(value.toLowerCase());
 
   const victoryRequired =
-    hasText('victory') ||
-    hasText('status: victory') ||
-    hasText('successful') ||
-    hasText('success');
+    hasText('victory') || hasText('status: victory') || hasText('successful') || hasText('success');
 
   const hasGeneSeed =
-    hasText('gene-seed: yes') ||
-    hasText('gene seed: yes') ||
-    hasText('gene-seed: true') ||
-    hasText('gene seed: true') ||
-    hasRole('gene-seed') ||
-    hasRole('gene seed');
+    hasText('gene-seed: yes') || hasText('gene seed: yes') ||
+    hasText('gene-seed: true') || hasText('gene seed: true') ||
+    hasRole('gene-seed') || hasRole('gene seed');
 
-  // ================= PvE Siege =================
-  if (
-    hasText('pve siege') ||
-    hasText('waves:') ||
-    hasText('waves') ||
-    hasRole('normal siege mode') ||
-    hasRole('hard siege mode')
-  ) {
+  if (hasText('pve siege') || hasText('waves:') || hasText('waves') || hasRole('normal siege mode') || hasRole('hard siege mode')) {
     const waveMatch =
       text.match(/waves\s*:\s*(\d+)/i) ||
       text.match(/waves\s*(\d+)/i) ||
       text.match(/(\d+)\s*waves/i);
-
     const waves = waveMatch ? parseInt(waveMatch[1], 10) : 0;
     const setsOfFive = Math.floor(waves / 5);
-
     let points = 0;
-
-    if (
-      hasRole('hard siege mode') ||
-      hasText('difficulty: hard') ||
-      hasText('hard')
-    ) {
+    if (hasRole('hard siege mode') || hasText('difficulty: hard') || hasText('hard')) {
       points = setsOfFive * 2;
-    } else if (
-      hasRole('normal siege mode') ||
-      hasText('difficulty: normal') ||
-      hasText('normal')
-    ) {
+    } else if (hasRole('normal siege mode') || hasText('difficulty: normal') || hasText('normal')) {
       points = setsOfFive * 1;
     }
-
-    return {
-      type: 'PvE Siege',
-      points
-    };
+    return { type: 'PvE Siege', points };
   }
 
-  // ================= PvE Stratagem =================
-  if (
-    hasText('pve stratagem') ||
-    hasRole('normal strat') ||
-    hasRole('hard strat') ||
-    hasRole('normal stratagem') ||
-    hasRole('hard stratagem')
-  ) {
+  if (hasText('pve stratagem') || hasRole('normal strat') || hasRole('hard strat') || hasRole('normal stratagem') || hasRole('hard stratagem')) {
     let points = 0;
-
-    if (
-      hasRole('hard strat') ||
-      hasRole('hard stratagem') ||
-      hasText('difficulty: hard') ||
-      hasText('hard strat')
-    ) {
+    if (hasRole('hard strat') || hasRole('hard stratagem') || hasText('difficulty: hard') || hasText('hard strat')) {
       points = 4;
-    } else if (
-      hasRole('normal strat') ||
-      hasRole('normal stratagem') ||
-      hasText('difficulty: normal') ||
-      hasText('normal strat')
-    ) {
+    } else if (hasRole('normal strat') || hasRole('normal stratagem') || hasText('difficulty: normal') || hasText('normal strat')) {
       points = 2;
     }
-
-    if (victoryRequired && hasGeneSeed) {
-      points += 1;
-    }
-
-    return {
-      type: 'PvE Stratagem',
-      points
-    };
+    if (victoryRequired && hasGeneSeed) points += 1;
+    return { type: 'PvE Stratagem', points };
   }
 
-  // ================= PvP Eternal War =================
-  if (
-    hasText('pvp eternal war') ||
-    hasText('gamemode:') ||
-    hasRole('pvp victory') ||
-    hasRole('pvp defeat')
-  ) {
+  if (hasText('pvp eternal war') || hasText('gamemode:') || hasRole('pvp victory') || hasRole('pvp defeat')) {
     let points = 0;
-
-    if (
-      hasRole('pvp victory') ||
-      hasText('status: victory') ||
-      hasText('victory')
-    ) {
+    if (hasRole('pvp victory') || hasText('status: victory') || hasText('victory')) {
       points = 2;
-    } else if (
-      hasRole('pvp defeat') ||
-      hasText('status: defeat') ||
-      hasText('defeat')
-    ) {
+    } else if (hasRole('pvp defeat') || hasText('status: defeat') || hasText('defeat')) {
       points = 1;
     }
-
-    return {
-      type: 'PvP Eternal War',
-      points
-    };
+    return { type: 'PvP Eternal War', points };
   }
 
-  // ================= PvE Operation =================
-  if (
-    hasText('pve operation') ||
-    hasText('operation:') ||
-    hasRole('absolute') ||
-    hasRole('lethal') ||
-    hasRole('ruthless')
-  ) {
+  if (hasText('pve operation') || hasText('operation:') || hasRole('absolute') || hasRole('lethal') || hasRole('ruthless')) {
     let points = 0;
-
-    if (
-      hasRole('absolute') ||
-      hasText('difficulty: absolute') ||
-      hasText('absolute')
-    ) {
+    if (hasRole('absolute') || hasText('difficulty: absolute') || hasText('absolute')) {
       points = 3;
-    } else if (
-      hasRole('lethal') ||
-      hasText('difficulty: lethal') ||
-      hasText('lethal')
-    ) {
+    } else if (hasRole('lethal') || hasText('difficulty: lethal') || hasText('lethal')) {
       points = 2;
     } else if (
-      hasRole('ruthless') ||
-      hasRole('substantial') ||
-      hasRole('average') ||
-      hasRole('minimal') ||
-      hasText('difficulty: ruthless') ||
-      hasText('ruthless') ||
-      hasText('substantial') ||
-      hasText('average') ||
-      hasText('minimal')
+      hasRole('ruthless') || hasRole('substantial') || hasRole('average') || hasRole('minimal') ||
+      hasText('difficulty: ruthless') || hasText('ruthless') || hasText('substantial') || hasText('average') || hasText('minimal')
     ) {
       points = 1;
     }
-
-    if (victoryRequired && hasGeneSeed) {
-      points += 1;
-    }
-
-    return {
-      type: 'PvE Operation',
-      points
-    };
+    if (victoryRequired && hasGeneSeed) points += 1;
+    return { type: 'PvE Operation', points };
   }
 
-  return {
-    type: 'Unknown',
-    points: 0
-  };
+  return { type: 'Unknown', points: 0 };
 }
 
 function isEligibleForSpecialty(member) {
-  return member.roles.cache.some(role =>
-    SPECIALTY_CONFIG.eligibleRankIds.includes(role.id)
-  );
+  return member.roles.cache.some(role => SPECIALTY_CONFIG.eligibleRankIds.includes(role.id));
 }
 
 function getCurrentSpecialty(member) {
   return SPECIALTY_CONFIG.specialties.find(spec =>
-    Object.values(spec.ranks).some(roleId =>
-      member.roles.cache.has(roleId)
-    )
+    Object.values(spec.ranks).some(roleId => member.roles.cache.has(roleId))
   );
 }
 
 function hasSpecialtyRole(member) {
   if (!member) return false;
-
-  return Boolean(getCurrentSpecialty(member)) ||
+  return (
+    Boolean(getCurrentSpecialty(member)) ||
     member.roles.cache.has(COMPANY_ANCIENT_ROLE_ID) ||
     member.roles.cache.has(COMPANY_CHAMPION_ROLE_ID) ||
     CAPTAIN_ROLE_IDS.some(roleId => member.roles.cache.has(roleId)) ||
-    LIEUTENANT_ROLE_IDS.some(roleId => member.roles.cache.has(roleId));
+    LIEUTENANT_ROLE_IDS.some(roleId => member.roles.cache.has(roleId))
+  );
 }
 
 async function removeAllSpecialtyRoles(member) {
-  const allRoles = SPECIALTY_CONFIG.specialties.flatMap(spec =>
-    Object.values(spec.ranks)
-  );
-
-  const rolesToRemove = allRoles.filter(roleId =>
-    member.roles.cache.has(roleId)
-  );
-
-  if (rolesToRemove.length > 0) {
-    await member.roles.remove(rolesToRemove);
-  }
+  const allRoles = SPECIALTY_CONFIG.specialties.flatMap(spec => Object.values(spec.ranks));
+  const rolesToRemove = allRoles.filter(roleId => member.roles.cache.has(roleId));
+  if (rolesToRemove.length > 0) await member.roles.remove(rolesToRemove);
 }
 
-// ================= AAR TEAM CREDIT =================
+// AAR TEAM CREDIT
 
 function getCreditedMembers(message) {
   const credited = new Map();
-
   credited.set(message.author.id, message.member);
-
   message.mentions.members.forEach(member => {
-    if (!member.user.bot) {
-      credited.set(member.id, member);
-    }
+    if (!member.user.bot) credited.set(member.id, member);
   });
-
   return [...credited.values()];
 }
 
-// ================= READY =================
+// READY
 
 client.once(Events.ClientReady, readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
 });
 
-// ================= AUTO WELCOME =================
+// AUTO WELCOME
 
 client.on(Events.GuildMemberAdd, member => {
   const channel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
@@ -1764,27 +1472,24 @@ client.on(Events.GuildMemberAdd, member => {
 
   return channel.send(
     `⚙️ The Machine Spirit acknowledges a new arrival...\n` +
-      `Welcome, ${member}.\n\n` +
-      `You now stand among the Sons of The Gorgon as a **Neophyte** of the Chapter.\n` +
-      `The flesh is weak. Strength is earned through discipline and iron.\n\n` +
-      `⚙️ Begin your induction:\n` +
-      `• Review the rules and conduct\n` +
-      `• Report to Neophyte uniform issue:<#1461491585874133159>\n` +
-      `• Look at the rank structure in <#${RANKS_CHANNEL_ID}>\n` +
-      `• Submit AARs after missions\n\n` +
-      `Use !help to access all Machine Spirit functions.`
+    `Welcome, ${member}.\n\n` +
+    `You now stand among the Sons of The Gorgon as a **Neophyte** of the Chapter.\n` +
+    `The flesh is weak. Strength is earned through discipline and iron.\n\n` +
+    `⚙️ Begin your induction:\n` +
+    `• Review the rules and conduct\n` +
+    `• Report to Neophyte uniform issue:<#1461491585874133159>\n` +
+    `• Look at the rank structure in <#${RANKS_CHANNEL_ID}>\n` +
+    `• Submit AARs after missions\n\n` +
+    `Use !help to access all Machine Spirit functions.`
   );
 });
 
-// ================= ARMORY STORAGE =================
+// ARMORY STORAGE
+
 function loadArmoryInventory() {
   if (!fs.existsSync(ARMORY_FILE)) {
-    fs.writeFileSync(ARMORY_FILE, JSON.stringify({
-      counter: 1,
-      items: {}
-    }, null, 2));
+    fs.writeFileSync(ARMORY_FILE, JSON.stringify({ counter: 1, items: {} }, null, 2));
   }
-
   return JSON.parse(fs.readFileSync(ARMORY_FILE, 'utf8'));
 }
 
@@ -1816,573 +1521,526 @@ function generateArmoryItemId() {
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isButton()) return;
 
-// ================= ARMORY DATA REWARD BUTTONS =================
-if (interaction.customId.startsWith('armorydata:')) {
-  if (!hasCommandAuthority(interaction.member)) {
+  // ARMORY DATA REWARD BUTTONS
+  if (interaction.customId.startsWith('armorydata:')) {
+    if (!hasCommandAuthority(interaction.member)) {
+      return interaction.reply({
+        content: '⚠️ Only authorized officers may confirm Armory Data rewards.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const [, type, aarMessageId] = interaction.customId.split(':');
+
+    if (type === 'gold') {
+      return interaction.reply({
+        content: '⚙️ Select the Gold Armory Data value recovered.',
+        components: [buildGoldArmoryDataRow(aarMessageId)],
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    let amount = 0;
+    if (type === 'green') amount = 0.25;
+    if (type === 'purple') amount = 0.5;
+    if (type === 'gold1') amount = 1;
+    if (type === 'gold2') amount = 1.5;
+    if (type === 'gold3') amount = 2;
+
+    if (amount <= 0) {
+      return interaction.reply({
+        content: '⚠️ Invalid Armory Data value.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const aarChannel = interaction.guild.channels.cache.get(AAR_CHANNEL_ID);
+    const aarMessage = await aarChannel.messages.fetch(aarMessageId).catch(() => null);
+
+    if (!aarMessage) {
+      return interaction.reply({
+        content: '⚠️ Could not find the original AAR message.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const creditedMembers = getCreditedMembers(aarMessage);
+    for (const member of creditedMembers) {
+      addUserArmoryData(member.id, amount);
+    }
+
+    const disabledRows = buildDisabledRowsFromMessage(interaction.message);
+    await interaction.message.edit({ components: disabledRows }).catch(() => null);
+
     return interaction.reply({
-      content: '⚠️ Only authorized officers may confirm Armory Data rewards.',
-      ephemeral: true
-    });
-  }
-
-  const [, type, aarMessageId] = interaction.customId.split(':');
-
-  if (type === 'gold') {
-    return interaction.reply({
-      content: '⚙️ Select the Gold Armory Data value recovered.',
-      components: [buildGoldArmoryDataRow(aarMessageId)],
-      ephemeral: true
-    });
-  }
-
-  let amount = 0;
-
-if (type === 'green') amount = 0.25;
-if (type === 'purple') amount = 0.5;
-
-if (type === 'gold1') amount = 1;
-if (type === 'gold2') amount = 1.5;
-if (type === 'gold3') amount = 2;
-
-  if (amount <= 0) {
-    return interaction.reply({
-      content: '⚠️ Invalid Armory Data value.',
-      ephemeral: true
-    });
-  }
-
-  const aarChannel = interaction.guild.channels.cache.get(AAR_CHANNEL_ID);
-  const aarMessage = await aarChannel.messages.fetch(aarMessageId).catch(() => null);
-
-  if (!aarMessage) {
-    return interaction.reply({
-      content: '⚠️ Could not find the original AAR message.',
-      ephemeral: true
-    });
-  }
-
-  const creditedMembers = getCreditedMembers(aarMessage);
-
-  for (const member of creditedMembers) {
-    addUserArmoryData(member.id, amount);
-  }
-
-  const disabledRows = buildDisabledRowsFromMessage(interaction.message);
-
-  await interaction.message.edit({
-    components: disabledRows
-  }).catch(() => null);
-
-  return interaction.reply({
-    content:
-      `⚙️ **Armory Data Logged**\n` +
-      `Awarded **${amount} Armory Data** to **${creditedMembers.length}** battle brother(s).`,
-    ephemeral: true
-  });
-}
-
-// ================= ARMORY SHOP SYSTEM =================
-if (interaction.customId === 'armory_add_item') {
-  if (!isArmoryManager(interaction.member)) {
-    return interaction.reply({
-      content: '⚠️ Only Techmarines, Iron Fathers, or the Primarch may forge armory items.',
-      ephemeral: true
-    });
-  }
-
-  const existing = getArmorySubmission(interaction.user.id);
-  if (existing) {
-    return interaction.reply({
-      content: '⚠️ You already have an active armory submission in progress.',
-      ephemeral: true
-    });
-  }
-
-  createArmorySubmission(interaction.user.id);
-
-  return interaction.reply({
-    content:
-      '⚙️ **Armory creation initiated.**\n\n' +
-      'Upload the image of the armor piece in this channel. Once the image is received, the Machine Spirit will continue the forge process.',
-    ephemeral: true
-  });
-}
-
-// ================= ARMORY REVIEW SYSTEM =================
-if (
-  interaction.customId.startsWith('armory_approve:') ||
-  interaction.customId.startsWith('armory_cancel:')
-) {
-  const parts = interaction.customId.split(':');
-
-  if (parts.length < 2) {
-    return interaction.reply({
-      content: '⚠️ Invalid armory interaction.',
-      ephemeral: true
-    });
-  }
-
-  if (!isArmoryManager(interaction.member)) {
-    return interaction.reply({
-      content: '⚠️ Only authorized forge staff may review armory items.',
-      ephemeral: true
-    });
-  }
-
-  const [action, targetUserId] = parts;
-  const submission = getArmorySubmission(targetUserId);
-
-  if (!submission) {
-    return interaction.reply({
-      content: '⚠️ That armory submission no longer exists or has already been processed.',
-      ephemeral: true
-    });
-  }
-
-  const disabledRows = buildDisabledRowsFromMessage(interaction.message);
-
-  if (action === 'armory_cancel') {
-    clearArmorySubmission(targetUserId);
-
-    await interaction.update({
       content:
-        `⚠️ **Armory Submission Cancelled**\n` +
-        `The item submission for <@${targetUserId}> has been cancelled by ${interaction.user}.`,
-      embeds: [],
-      components: disabledRows
+        `⚙️ **Armory Data Logged**\n` +
+        `Awarded **${amount} Armory Data** to **${creditedMembers.length}** battle brother(s).`,
+      flags: MessageFlags.Ephemeral
     });
-
-    return;
   }
 
-  if (action === 'armory_approve') {
-    const item = saveArmoryItem(submission, interaction.user.id);
-    clearArmorySubmission(targetUserId);
+  // ARMORY SHOP SYSTEM
+  if (interaction.customId === 'armory_add_item') {
+    if (!isArmoryManager(interaction.member)) {
+      return interaction.reply({
+        content: '⚠️ Only Techmarines, Iron Fathers, or the Primarch may forge armory items.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
 
-    const armoryChannel = interaction.guild.channels.cache.get(ARMORY_CHANNEL_ID);
-    let shopMessage = null;
+    const existing = getArmorySubmission(interaction.user.id);
+    if (existing) {
+      return interaction.reply({
+        content: '⚠️ You already have an active armory submission in progress.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
 
-    const dropMessage = getRandomArmoryDropMessage();
+    createArmorySubmission(interaction.user.id);
 
-    if (armoryChannel) {
-      shopMessage = await armoryChannel.send({
+    return interaction.reply({
+      content:
+        '⚙️ **Armory creation initiated.**\n\n' +
+        'Upload the image of the armor piece in this channel. Once the image is received, the Machine Spirit will continue the forge process.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  // ARMORY REVIEW SYSTEM
+  if (
+    interaction.customId.startsWith('armory_approve:') ||
+    interaction.customId.startsWith('armory_cancel:')
+  ) {
+    const parts = interaction.customId.split(':');
+
+    if (parts.length < 2) {
+      return interaction.reply({
+        content: '⚠️ Invalid armory interaction.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    if (!isArmoryManager(interaction.member)) {
+      return interaction.reply({
+        content: '⚠️ Only authorized forge staff may review armory items.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const [action, targetUserId] = parts;
+    const submission = getArmorySubmission(targetUserId);
+
+    if (!submission) {
+      return interaction.reply({
+        content: '⚠️ That armory submission no longer exists or has already been processed.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const disabledRows = buildDisabledRowsFromMessage(interaction.message);
+
+    if (action === 'armory_cancel') {
+      clearArmorySubmission(targetUserId);
+      await interaction.update({
         content:
-  	`<@&${IRON_HANDS_ROLE_ID}>\n` +
-  	`⚙️ **New Forge Stock Available!**\n` +
-  	`${dropMessage}`,
-        embeds: [buildArmoryShopEmbed(item)],
-        components: [buildArmoryShopRow(item.itemId)],
-        allowedMentions: {
-          roles: [IRON_HANDS_ROLE_ID]
-        }
+          `⚠️ **Armory Submission Cancelled**\n` +
+          `The item submission for <@${targetUserId}> has been cancelled by ${interaction.user}.`,
+        embeds: [],
+        components: disabledRows
+      });
+      return;
+    }
+
+    if (action === 'armory_approve') {
+      const item = saveArmoryItem(submission, interaction.user.id);
+      clearArmorySubmission(targetUserId);
+
+      const armoryChannel = interaction.guild.channels.cache.get(ARMORY_CHANNEL_ID);
+      let shopMessage = null;
+      const dropMessage = getRandomArmoryDropMessage();
+
+      if (armoryChannel) {
+        shopMessage = await armoryChannel.send({
+          content:
+            `<@&${IRON_HANDS_ROLE_ID}>\n` +
+            `⚙️ **New Forge Stock Available!**\n` +
+            `${dropMessage}`,
+          embeds: [buildArmoryShopEmbed(item)],
+          components: [buildArmoryShopRow(item.itemId)],
+          allowedMentions: { roles: [IRON_HANDS_ROLE_ID] }
+        });
+        item.shopMessageId = shopMessage.id;
+        setArmoryItem(item);
+      }
+
+      const forgeChannel = interaction.guild.channels.cache.get(FORGE_CHANNEL_ID);
+      if (forgeChannel) {
+        await forgeChannel.send(
+          `⚙️ **Armory Item Approved**\n` +
+          `**Item:** ${item.itemName}\n` +
+          `**Category:** ${item.category}\n` +
+          `**Price:** ${item.price} Armory Data\n` +
+          `**Stock:** ${item.stock}\n` +
+          `**Approved By:** ${interaction.user}`
+        );
+      }
+
+      await interaction.update({
+        content:
+          `⚙️ **Praise the Omnissiah, This Machine Spirit is satisfied.**\n\n` +
+          `🔥 **Forge Complete**\n` +
+          `The item **${item.itemName}** has been sanctified and entered into the armory by ${interaction.user}.`,
+        embeds: [buildArmoryReviewEmbed(submission, `<@${targetUserId}>`)],
+        components: disabledRows
       });
 
-      item.shopMessageId = shopMessage.id;
-      setArmoryItem(item);	
+      return;
     }
+  }
+
+  // ARMORY PURCHASE SYSTEM
+  if (interaction.customId.startsWith('armory_buy:')) {
+    const parts = interaction.customId.split(':');
+
+    if (parts.length < 2) {
+      return interaction.reply({
+        content: '⚠️ Invalid purchase interaction.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const [, itemId] = parts;
+    const item = getArmoryItem(itemId);
+
+    if (!item || !item.active) {
+      return interaction.reply({
+        content: '⚠️ This item is no longer available in the armory.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    if (item.stock <= 0) {
+      return interaction.reply({
+        content: '⚠️ This item has already been claimed.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const currentBalance = getUserArmoryData(interaction.user.id);
+
+    if (currentBalance < item.price) {
+      return interaction.reply({
+        content:
+          `⚙️ **The Machine Spirit denies this request.**\n\n` +
+          `Required: ${item.price} Armory Data\n` +
+          `You possess: ${currentBalance}`,
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    removeUserArmoryData(interaction.user.id, item.price);
+    item.stock -= 1;
+    if (item.stock <= 0) item.active = false;
+    setArmoryItem(item);
 
     const forgeChannel = interaction.guild.channels.cache.get(FORGE_CHANNEL_ID);
     if (forgeChannel) {
       await forgeChannel.send(
-        `⚙️ **Armory Item Approved**\n` +
+        `⚙️ **Armory Acquisition Logged**\n` +
+        `**Brother:** ${interaction.user}\n` +
         `**Item:** ${item.itemName}\n` +
-        `**Category:** ${item.category}\n` +
-        `**Price:** ${item.price} Armory Data\n` +
-        `**Stock:** ${item.stock}\n` +
-        `**Approved By:** ${interaction.user}`
+        `**Cost:** ${item.price} Armory Data\n` +
+        `**Stock Remaining:** ${item.stock}`
       );
     }
 
-    await interaction.update({
-      content:
-        `⚙️ **Praise the Omnissiah, This Machine Spirit is satisfied.**\n\n` +
-        `🔥 **Forge Complete**\n` +
-        `The item **${item.itemName}** has been sanctified and entered into the armory by ${interaction.user}.`,
-      embeds: [buildArmoryReviewEmbed(submission, `<@${targetUserId}>`)],
-      components: disabledRows
-    });
+    try {
+      const armoryChannel = interaction.guild.channels.cache.get(ARMORY_CHANNEL_ID);
+      if (armoryChannel && item.shopMessageId) {
+        const shopMsg = await armoryChannel.messages.fetch(item.shopMessageId);
+        await shopMsg.edit({
+          content: shopMsg.content,
+          embeds: [buildArmoryShopEmbed(item)],
+          components: item.active ? [buildArmoryShopRow(item.itemId)] : []
+        });
+      }
+    } catch (err) {
+      console.error('Armory message update failed:', err);
+    }
 
-    return;
-  }
-}
-
-// ================= ARMORY PURCHASE SYSTEM =================
-if (interaction.customId.startsWith('armory_buy:')) {
-  const parts = interaction.customId.split(':');
-
-  if (parts.length < 2) {
-    return interaction.reply({
-      content: '⚠️ Invalid purchase interaction.',
-      ephemeral: true
-    });
-  }
-
-  const [, itemId] = parts;
-  const item = getArmoryItem(itemId);
-
-  if (!item || !item.active) {
-    return interaction.reply({
-      content: '⚠️ This item is no longer available in the armory.',
-      ephemeral: true
-    });
-  }
-
-  if (item.stock <= 0) {
-    return interaction.reply({
-      content: '⚠️ This item has already been claimed.',
-      ephemeral: true
-    });
-  }
-
-  const currentBalance = getUserArmoryData(interaction.user.id);
-
-  if (currentBalance < item.price) {
     return interaction.reply({
       content:
-        `⚙️ **The Machine Spirit denies this request.**\n\n` +
-        `Required: ${item.price} Armory Data\n` +
-        `You possess: ${currentBalance}`,
-      ephemeral: true
+        `⚙️ **Praise the Omnissiah**\n\n` +
+        `You have successfully acquired **${item.itemName}** for ${item.price} Armory Data.`,
+      flags: MessageFlags.Ephemeral
     });
   }
 
-  // COMPLETE PURCHASE
-  removeUserArmoryData(interaction.user.id, item.price);
-  item.stock -= 1;
-
-  if (item.stock <= 0) {
-    item.active = false;
+  // ARMORY BALANCE
+  if (interaction.customId.startsWith('armory_balance')) {
+    const currentBalance = getUserArmoryData(interaction.user.id);
+    return interaction.reply({
+      content:
+        `⚙️ **The Machine Spirit reports your reserves.**\n\n` +
+        `You currently possess: **${currentBalance} Armory Data**`,
+      flags: MessageFlags.Ephemeral
+    });
   }
 
-  setArmoryItem(item);
+  // SPECIALTY APPLICATION SYSTEM
+  const specialty = SPECIALTY_CONFIG.specialties.find(
+    spec => spec.buttonId === interaction.customId
+  );
 
-  // LOG TO FORGE CHANNEL
-  const forgeChannel = interaction.guild.channels.cache.get(FORGE_CHANNEL_ID);
-  if (forgeChannel) {
-    await forgeChannel.send(
-      `⚙️ **Armory Acquisition Logged**\n` +
-      `**Brother:** ${interaction.user}\n` +
-      `**Item:** ${item.itemName}\n` +
-      `**Cost:** ${item.price} Armory Data\n` +
-      `**Stock Remaining:** ${item.stock}`
-    );
+  if (specialty) {
+    const member = interaction.member;
+    const guild = interaction.guild;
+
+    try {
+      if (!isEligibleForSpecialty(member)) {
+        return interaction.reply({
+          content: '⚠️ Request denied. Only Sergeants and above may apply for these roles.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      const current = getCurrentSpecialty(member);
+      if (current) {
+        return interaction.reply({
+          content: `⚠️ You already belong to **${current.label}**.`,
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      if (pendingSpecialtyApplications.has(member.id)) {
+        return interaction.reply({
+          content: '⚠️ You already have a pending application.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      pendingSpecialtyApplications.add(member.id);
+
+      const logChannel = guild.channels.cache.get(SPECIALTY_CONFIG.logChannelId);
+      if (logChannel) {
+        const reviewRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`specapprove:${member.id}:${specialty.key}`)
+            .setLabel('Approve')
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`specdeny:${member.id}:${specialty.key}`)
+            .setLabel('Deny')
+            .setStyle(ButtonStyle.Danger)
+        );
+
+        await logChannel.send({
+          content:
+            `📡 <@&${SPECIALTY_CONFIG.highCommandRoleId}> ${member} applied for **${specialty.label}**.\n` +
+            `Review and render judgment below.`,
+          components: [reviewRow]
+        });
+      }
+
+      return interaction.reply({
+        content: `✅ Application for **${specialty.label}** submitted.`,
+        flags: MessageFlags.Ephemeral
+      });
+
+    } catch (err) {
+      console.error('Specialty Error:', err);
+      return interaction.reply({
+        content: '⚠️ Machine Spirit error.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
   }
 
-  // UPDATE SHOP MESSAGE
-  try {
-    const armoryChannel = interaction.guild.channels.cache.get(ARMORY_CHANNEL_ID);
-
-    if (armoryChannel && item.shopMessageId) {
-      const shopMsg = await armoryChannel.messages.fetch(item.shopMessageId);
-
-      await shopMsg.edit({
-        content: shopMsg.content,
-        embeds: [buildArmoryShopEmbed(item)],
-        components: item.active ? [buildArmoryShopRow(item.itemId)] : []
-      });
-    }
-  } catch (err) {
-    console.error('Armory message update failed:', err);
-  }
-
-  return interaction.reply({
-    content:
-      `⚙️ **Praise the Omnissiah**\n\n` +
-      `You have successfully acquired **${item.itemName}** for ${item.price} Armory Data.`,
-    ephemeral: true
-  });
-}
-
-// ================= ARMORY BALANCE =================
-if (interaction.customId.startsWith('armory_balance')) {
-  const currentBalance = getUserArmoryData(interaction.user.id);
-
-  return interaction.reply({
-    content:
-      `⚙️ **The Machine Spirit reports your reserves.**\n\n` +
-      `You currently possess: **${currentBalance} Armory Data**`,
-    ephemeral: true
-  });
-}
-
-// ================= SPECIALTY APPLICATION SYSTEM =================
-const specialty = SPECIALTY_CONFIG.specialties.find(
-  spec => spec.buttonId === interaction.customId
-);
-
-if (specialty) {
-  const member = interaction.member;
-  const guild = interaction.guild;
-
-  try {
-    if (!isEligibleForSpecialty(member)) {
+  // SPECIALTY REVIEW SYSTEM
+  if (
+    interaction.customId.startsWith('specapprove:') ||
+    interaction.customId.startsWith('specdeny:')
+  ) {
+    if (!interaction.guild || !interaction.member) {
       return interaction.reply({
-        content: '⚠️ Request denied. Only Sergeants and above may apply for these roles.',
-        ephemeral: true
+        content: '⚠️ This action may only be used inside the guild.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
-    const current = getCurrentSpecialty(member);
-    if (current) {
+    if (!hasCommandAuthority(interaction.member)) {
       return interaction.reply({
-        content: `⚠️ You already belong to **${current.label}**.`,
-        ephemeral: true
+        content: '⚠️ Only High Command, Captains, or Lieutenants may review specialty applications.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
-    if (pendingSpecialtyApplications.has(member.id)) {
+    const [action, targetUserId, specialtyKey] = interaction.customId.split(':');
+    const targetMember = await interaction.guild.members.fetch(targetUserId).catch(() => null);
+
+    if (!targetMember) {
       return interaction.reply({
-        content: '⚠️ You already have a pending application.',
-        ephemeral: true
+        content: '⚠️ Could not find that brother in the server. They may have left.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
-    pendingSpecialtyApplications.add(member.id);
+    const specialtyMatch = SPECIALTY_CONFIG.specialties.find(spec => spec.key === specialtyKey);
 
-    const logChannel = guild.channels.cache.get(SPECIALTY_CONFIG.logChannelId);
+    if (!specialtyMatch) {
+      return interaction.reply({
+        content: '⚠️ Invalid specialty key.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
 
-    if (logChannel) {
-      const reviewRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`specapprove:${member.id}:${specialty.key}`)
-          .setLabel('Approve')
-          .setStyle(ButtonStyle.Success),
+    const disabledRows = buildDisabledRowsFromMessage(interaction.message);
 
-        new ButtonBuilder()
-          .setCustomId(`specdeny:${member.id}:${specialty.key}`)
-          .setLabel('Deny')
-          .setStyle(ButtonStyle.Danger)
-      );
+    if (action === 'specapprove') {
+      await removeAllSpecialtyRoles(targetMember);
+      await targetMember.roles.add(specialtyMatch.ranks.entry);
+      pendingSpecialtyApplications.delete(targetMember.id);
 
-      await logChannel.send({
+      try {
+        await targetMember.send(
+          `✅ **High Command has rendered judgment.**\n\n` +
+          `Your application for **${specialtyMatch.label}** has been **approved**.\n` +
+          `You have been admitted at the entry rank of that path.`
+        );
+      } catch (error) {
+        console.error(`Could not DM ${targetMember.user.tag}:`, error);
+      }
+
+      await interaction.update({
         content:
-          `📡 <@&${SPECIALTY_CONFIG.highCommandRoleId}> ${member} applied for **${specialty.label}**.\n` +
-          `Review and render judgment below.`,
-        components: [reviewRow]
+          `✅ **Specialty Approved**\n` +
+          `Brother <@${targetUserId}> has been approved for **${specialtyMatch.label}**.\n` +
+          `Assigned Entry Rank: ${specialtyMatch.label}\n` +
+          `Reviewed by ${interaction.user}.`,
+        components: disabledRows
       });
+
+      return;
     }
 
-    return interaction.reply({
-      content: `✅ Application for **${specialty.label}** submitted.`,
-      ephemeral: true
-    });
+    if (action === 'specdeny') {
+      pendingSpecialtyApplications.delete(targetMember.id);
 
-  } catch (err) {
-    console.error('Specialty Error:', err);
+      try {
+        await targetMember.send(
+          `⚠️ **High Command has rendered judgment.**\n\n` +
+          `Your application for **${specialtyMatch.label}** has been **denied** at this time.\n` +
+          `Continue your service and stand ready for future review.`
+        );
+      } catch (error) {
+        console.error(`Could not DM ${targetMember.user.tag}:`, error);
+      }
 
-    return interaction.reply({
-      content: '⚠️ Machine Spirit error.',
-      ephemeral: true
-    });
-  }
-}
-
-// ================= SPECIALTY REVIEW SYSTEM =================
-if (
-  interaction.customId.startsWith('specapprove:') ||
-  interaction.customId.startsWith('specdeny:')
-) {
-  if (!interaction.guild || !interaction.member) {
-    return interaction.reply({
-      content: '⚠️ This action may only be used inside the guild.',
-      ephemeral: true
-    });
-  }
-
-  if (!hasCommandAuthority(interaction.member)) {
-    return interaction.reply({
-      content: '⚠️ Only High Command, Captains, or Lieutenants may review specialty applications.',
-      ephemeral: true
-    });
-  }
-
-  const [action, targetUserId, specialtyKey] = interaction.customId.split(':');
-  const targetMember = await interaction.guild.members.fetch(targetUserId).catch(() => null);
-
-  if (!targetMember) {
-    return interaction.reply({
-      content: '⚠️ Could not find that brother in the server.',
-      ephemeral: true
-    });
-  }
-
-  const specialty = SPECIALTY_CONFIG.specialties.find(spec => spec.key === specialtyKey);
-
-  if (!specialty) {
-    return interaction.reply({
-      content: '⚠️ Invalid specialty key.',
-      ephemeral: true
-    });
-  }
-
-  const disabledRows = buildDisabledRowsFromMessage(interaction.message);
-
-  if (action === 'specapprove') {
-    await removeAllSpecialtyRoles(targetMember);
-    await targetMember.roles.add(specialty.ranks.entry);
-    pendingSpecialtyApplications.delete(targetMember.id);
-
-    try {
-      await targetMember.send(
-        `✅ **High Command has rendered judgment.**\n\n` +
-        `Your application for **${specialty.label}** has been **approved**.\n` +
-        `You have been admitted at the entry rank of that path.`
-      );
-    } catch (error) {
-      console.error(`Could not DM ${targetMember.user.tag}:`, error);
-    }
-
-    await interaction.update({
-      content:
-        `✅ **Specialty Approved**\n` +
-        `Brother <@${targetUserId}> has been approved for **${specialty.label}**.\n` +
-        `Assigned Entry Rank: ${specialty.label}\n` +
-        `Reviewed by ${interaction.user}.`,
-      components: disabledRows
-    });
-
-    return;
-  }
-
-  if (action === 'specdeny') {
-    pendingSpecialtyApplications.delete(targetMember.id);
-
-    try {
-      await targetMember.send(
-        `⚠️ **High Command has rendered judgment.**\n\n` +
-        `Your application for **${specialty.label}** has been **denied** at this time.\n` +
-        `Continue your service and stand ready for future review.`
-      );
-    } catch (error) {
-      console.error(`Could not DM ${targetMember.user.tag}:`, error);
-    }
-
-    await interaction.update({
-      content:
-        `⚠️ **Specialty Denied**\n` +
-        `Brother <@${targetUserId}> has been denied for **${specialty.label}**.\n` +
-        `Reviewed by ${interaction.user}.`,
-      components: disabledRows
-    });
-
-    return;
-  }
-}
-
-// ================= HELP BUTTON HUB =================
-if (interaction.customId.startsWith('help_')) {
-  let embed;
-
-  if (interaction.customId === 'help_general') {
-    embed = new EmbedBuilder()
-      .setTitle('⚙️ General Guidance')
-      .setDescription(
-        '`!uniform` - Uniform standards\n' +
-        '`!aar` - How to post an AAR\n' +
-        '`!ranks` - Rank structure and progression\n' +
-        '`!flesh` - Iron Hands doctrine\n' +
-        '`!profile` - View your service record\n' +
-        '`!points` - View your AAR points'
-      );
-
-    return interaction.reply({
-      embeds: [embed],
-      ephemeral: true
-    });
-  }
-
-  if (interaction.customId === 'help_progression') {
-    embed = new EmbedBuilder()
-      .setTitle('⚙️ Progression Guidance')
-      .setDescription(
-        '`!progression` - View your progression-path record\n\n' +
-        'Brothers advance through AAR points, command review, and trial systems.\n' +
-        'Higher paths and command roles require judgment by High Command.'
-      );
-
-    return interaction.reply({
-      embeds: [embed],
-      ephemeral: true
-    });
-  }
-
-  if (interaction.customId === 'help_specialty') {
-    embed = new EmbedBuilder()
-      .setTitle('⚔️ Specialty Guidance')
-      .setDescription(
-        'Specialty applications are submitted through the specialty panel.\n\n' +
-        '**Requirements:**\n' +
-        'Only **Sergeants and above** may apply.\n\n' +
-        '**Available Paths:**\n' +
-        '• Librarius\n' +
-        '• Reclusiam\n' +
-        '• Apothecarion\n' +
-        '• Armoury'
-      );
-
-    return interaction.reply({
-      embeds: [embed],
-      ephemeral: true
-    });
-  }
-
-  if (interaction.customId === 'help_admin') {
-    if (!hasCommandAuthority(interaction.member)) {
-      return interaction.reply({
-        content: '⚠️ Command access required.',
-        ephemeral: true
+      await interaction.update({
+        content:
+          `⚠️ **Specialty Denied**\n` +
+          `Brother <@${targetUserId}> has been denied for **${specialtyMatch.label}**.\n` +
+          `Reviewed by ${interaction.user}.`,
+        components: disabledRows
       });
+
+      return;
     }
-
-    embed = new EmbedBuilder()
-      .setTitle('🛡️ Command Tools')
-      .setDescription(
-        '`!syncallranks` - Rebuild promotion data from Discord roles\n' +
-        '`!approve @user` - Approve pending promotion\n' +
-        '`!deny @user` - Deny pending promotion\n' +
-        '`!settitle @user title` - Set custom title\n' +
-        '`!promote @user rank` - Promote\n' +
-        '`!demote @user rank` - Demote\n' +
-        '`!setpoints @user amount` - Set AAR points\n' +
-        '`!addpoints @user amount` - Add AAR points\n' +
-        '`!removepoints @user amount` - Remove AAR points\n' +
-        '`!setrank @user trackedRank | officialRank` - Set tracked + display rank\n' +
-        '`!resetprogression @user` - Reset progression-path state\n' +
-        '`!sendpathprompt @user` - Send progression path prompt manually\n' +
-        '`!specialtypanel` - Deploy specialty application panel'
-      );
-
-    return interaction.reply({
-      embeds: [embed],
-      ephemeral: true
-    });
   }
 
-  if (interaction.customId === 'help_trials') {
-    if (!hasCommandAuthority(interaction.member)) {
-      return interaction.reply({
-        content: '⚠️ Command access required.',
-        ephemeral: true
-      });
+  // HELP BUTTON HUB
+  if (interaction.customId.startsWith('help_')) {
+    let embed;
+
+    if (interaction.customId === 'help_general') {
+      embed = new EmbedBuilder()
+        .setTitle('⚙️ General Guidance')
+        .setDescription(
+          '`!uniform` - Uniform standards\n' +
+          '`!aar` - How to post an AAR\n' +
+          '`!ranks` - Rank structure and progression\n' +
+          '`!flesh` - Iron Hands doctrine\n' +
+          '`!profile` - View your service record\n' +
+          '`!points` - View your AAR points'
+        );
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
-    embed = new EmbedBuilder()
-      .setTitle('⚔️ Trial Tools')
-      .setDescription(
-        '`!fireteamreview @user` - Send Fireteam reassessment prompt\n' +
-        '`!sergeantreview @user` - Send Sergeant readiness review buttons\n' +
-        '`!championreport @user | overseer rank | class | mode | difficulty | wave | extracted yes/no | extremis kills | success/fail`\n' +
-        '`!ancientreport @user | operation | overseer rank | class | difficulty | squad1,squad2,squad3 | noDowns yes/no | geneSeed yes/no | armouryData yes/no | success/fail`'
-      );
+    if (interaction.customId === 'help_progression') {
+      embed = new EmbedBuilder()
+        .setTitle('⚙️ Progression Guidance')
+        .setDescription(
+          '`!progression` - View your progression-path record\n\n' +
+          'Brothers advance through AAR points, command review, and trial systems.\n' +
+          'Higher paths and command roles require judgment by High Command.'
+        );
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
 
-    return interaction.reply({
-      embeds: [embed],
-      ephemeral: true
-    });
+    if (interaction.customId === 'help_specialty') {
+      embed = new EmbedBuilder()
+        .setTitle('⚔️ Specialty Guidance')
+        .setDescription(
+          'Specialty applications are submitted through the specialty panel.\n\n' +
+          '**Requirements:**\n' +
+          'Only **Sergeants and above** may apply.\n\n' +
+          '**Available Paths:**\n' +
+          '• Librarius\n' +
+          '• Reclusiam\n' +
+          '• Apothecarion\n' +
+          '• Armoury'
+        );
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
+
+    if (interaction.customId === 'help_admin') {
+      if (!hasCommandAuthority(interaction.member)) {
+        return interaction.reply({
+          content: '⚠️ Command access required.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+      embed = new EmbedBuilder()
+        .setTitle('🛡️ Command Tools')
+        .setDescription(
+          '`!syncallranks` - Rebuild promotion data from Discord roles\n' +
+          '`!approve @user` - Approve pending promotion\n' +
+          '`!deny @user` - Deny pending promotion\n' +
+          '`!settitle @user title` - Set custom title\n' +
+          '`!promote @user rank` - Promote\n' +
+          '`!demote @user rank` - Demote\n' +
+          '`!setpoints @user amount` - Set AAR points\n' +
+          '`!addpoints @user amount` - Add AAR points\n' +
+          '`!removepoints @user amount` - Remove AAR points\n' +
+          '`!setrank @user trackedRank | officialRank` - Set tracked + display rank\n' +
+          '`!resetprogression @user` - Reset progression-path state\n' +
+          '`!sendpathprompt @user` - Send progression path prompt manually\n' +
+          '`!specialtypanel` - Deploy specialty application panel'
+        );
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
+
+    if (interaction.customId === 'help_trials') {
+      if (!hasCommandAuthority(interaction.member)) {
+        return interaction.reply({
+          content: '⚠️ Command access required.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+      embed = new EmbedBuilder()
+        .setTitle('⚔️ Trial Tools')
+        .setDescription(
+          '`!fireteamreview @user` - Send Fireteam reassessment prompt\n' +
+          '`!sergeantreview @user` - Send Sergeant readiness review buttons\n' +
+          '`!championreport @user | overseer rank | class | mode | difficulty | wave | extracted yes/no | extremis kills | success/fail`\n' +
+          '`!ancientreport @user | operation | overseer rank | class | difficulty | squad1,squad2,squad3 | noDowns yes/no | geneSeed yes/no | armouryData yes/no | success/fail`'
+        );
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
   }
-}
 
-  // ================= USER PATH SELECTION =================
+  // USER PATH SELECTION
   if (interaction.customId.startsWith('pathselect:')) {
     const [, pathKey] = interaction.customId.split(':');
     const userId = interaction.user.id;
@@ -2391,14 +2049,14 @@ if (interaction.customId.startsWith('help_')) {
     if (!Object.values(PATH_KEYS).includes(pathKey)) {
       return interaction.reply({
         content: '⚠️ Unknown path selection.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (!promoData.progressionChoicePending || promoData.pathStatus !== 'awaiting_selection') {
       return interaction.reply({
         content: '⚠️ Your progression choice is not currently awaiting selection.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2424,7 +2082,6 @@ if (interaction.customId.startsWith('help_')) {
     const highCommandChannel = client.channels.cache.get(HIGH_COMMAND_CHANNEL_ID);
     if (highCommandChannel) {
       const points = getUserXP(userId);
-
       await highCommandChannel.send({
         content:
           `⚠️ **Path Review Required**\n` +
@@ -2438,19 +2095,19 @@ if (interaction.customId.startsWith('help_')) {
     return;
   }
 
-  // ================= HIGH COMMAND PATH REVIEW =================
+  // HIGH COMMAND PATH REVIEW
   if (interaction.customId.startsWith('pathreview:')) {
     if (!interaction.guild || !interaction.member) {
       return interaction.reply({
         content: '⚠️ This action may only be used inside the guild.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (!hasCommandAuthority(interaction.member)) {
       return interaction.reply({
         content: '⚠️ Only High Command, Captains, or Lieutenants may review path selections.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2459,14 +2116,14 @@ if (interaction.customId.startsWith('help_')) {
     if (!['approve', 'deny'].includes(action)) {
       return interaction.reply({
         content: '⚠️ Invalid review action.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (!Object.values(PATH_KEYS).includes(pathKey)) {
       return interaction.reply({
         content: '⚠️ Invalid path key.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2474,8 +2131,8 @@ if (interaction.customId.startsWith('help_')) {
 
     if (!targetMember) {
       return interaction.reply({
-        content: '⚠️ Could not find that brother in the server.',
-        ephemeral: true
+        content: '⚠️ Could not find that brother in the server. They may have left.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2485,62 +2142,58 @@ if (interaction.customId.startsWith('help_')) {
     if (promoData.selectedPath !== expectedPathLabel || promoData.pathStatus !== 'pending_review') {
       return interaction.reply({
         content: '⚠️ This request is no longer pending or no longer matches the stored path.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     const disabledRows = buildDisabledRowsFromMessage(interaction.message);
 
-if (action === 'approve') {
-  const updatePayload = {
-    progressionChoiceOffered: true,
-    progressionChoicePending: false,
-    progressionChoiceMade: true,
-    selectedPath: expectedPathLabel,
-    pathStatus: pathKey === PATH_KEYS.FIRETEAM ? 'active' : 'approved'
-  };
+    if (action === 'approve') {
+      const updatePayload = {
+        progressionChoiceOffered: true,
+        progressionChoicePending: false,
+        progressionChoiceMade: true,
+        selectedPath: expectedPathLabel,
+        pathStatus: pathKey === PATH_KEYS.FIRETEAM ? 'active' : 'approved'
+      };
 
-  if (pathKey === PATH_KEYS.FIRETEAM) {
-    updatePayload.fireteamData = {
-      ...promoData.fireteamData,
-      active: true,
-      approvedAt: new Date().toISOString(),
-      reassessmentDue: false
-    };
-  }
-
-  if (pathKey === PATH_KEYS.CHAMPION) {
-    updatePayload.trialData = {
-      ...promoData.trialData,
-      champion: {
-        ...promoData.trialData.champion,
-        active: true,
-        status: 'approved',
-        attempts: (promoData.trialData.champion.attempts || 0) + 1,
-        cooldownUntil: null,
-        lastReport: null
+      if (pathKey === PATH_KEYS.FIRETEAM) {
+        updatePayload.fireteamData = {
+          ...promoData.fireteamData,
+          active: true,
+          approvedAt: new Date().toISOString(),
+          reassessmentDue: false
+        };
       }
-    };
-  }
 
-  if (pathKey === PATH_KEYS.ANCIENT) {
-    updatePayload.trialData = {
-      ...promoData.trialData,
-      ancient: {
-        ...promoData.trialData.ancient,
-        active: true,
-        status: 'approved',
-        attempts: (promoData.trialData.ancient.attempts || 0) + 1,
-        operations: {
-          Inferno: null,
-          Decapitation: null
-        }
+      if (pathKey === PATH_KEYS.CHAMPION) {
+        updatePayload.trialData = {
+          ...promoData.trialData,
+          champion: {
+            ...promoData.trialData.champion,
+            active: true,
+            status: 'approved',
+            attempts: (promoData.trialData.champion.attempts || 0) + 1,
+            cooldownUntil: null,
+            lastReport: null
+          }
+        };
       }
-    };
-  }
-      
-	
-	setProgressionChoiceState(targetUserId, updatePayload);
+
+      if (pathKey === PATH_KEYS.ANCIENT) {
+        updatePayload.trialData = {
+          ...promoData.trialData,
+          ancient: {
+            ...promoData.trialData.ancient,
+            active: true,
+            status: 'approved',
+            attempts: (promoData.trialData.ancient.attempts || 0) + 1,
+            operations: { Inferno: null, Decapitation: null }
+          }
+        };
+      }
+
+      setProgressionChoiceState(targetUserId, updatePayload);
 
       if (pathKey === PATH_KEYS.FIRETEAM) {
         await syncMemberRankRole(targetMember, 'Fireteam Leader');
@@ -2550,11 +2203,9 @@ if (action === 'approve') {
         await targetMember.send(
           `✅ **High Command has rendered judgment.**\n\n` +
           `Your request for **${expectedPathLabel}** has been **approved**.\n` +
-          (
-            pathKey === PATH_KEYS.FIRETEAM
-              ? `You now stand upon the **Fireteam Leader** path.`
-              : `Your path has been approved. Trial management is now active.`
-          )
+          (pathKey === PATH_KEYS.FIRETEAM
+            ? `You now stand upon the **Fireteam Leader** path.`
+            : `Your path has been approved. Trial management is now active.`)
         );
       } catch (error) {
         console.error(`Could not DM ${targetMember.user.tag}:`, error);
@@ -2602,14 +2253,14 @@ if (action === 'approve') {
     }
   }
 
-  // ================= FIRETEAM REASSESSMENT =================
+  // FIRETEAM REASSESSMENT
   if (interaction.customId.startsWith('fireteamreassess:')) {
     const [, action, userId] = interaction.customId.split(':');
 
     if (interaction.user.id !== userId) {
       return interaction.reply({
         content: '⚠️ This reassessment is not assigned to you.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2618,7 +2269,7 @@ if (action === 'approve') {
     if (!promoData.fireteamData.active) {
       return interaction.reply({
         content: '⚠️ You are not currently on the Fireteam Leader path.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2638,7 +2289,7 @@ if (action === 'approve') {
 
       await interaction.update({
         content:
-          ` **Fireteam Path Confirmed**\n\n` +
+          `⚙️ **Fireteam Path Confirmed**\n\n` +
           `You have chosen to remain upon the **Fireteam Leader** path and continue proving yourself.`,
         components: disabledRows
       });
@@ -2647,17 +2298,13 @@ if (action === 'approve') {
     }
 
     let requestedPath = null;
-
-    if (action === FIRETEAM_REVIEW_PATHS.CHAMPION) {
-      requestedPath = PATH_KEYS.CHAMPION;
-    } else if (action === FIRETEAM_REVIEW_PATHS.ANCIENT) {
-      requestedPath = PATH_KEYS.ANCIENT;
-    }
+    if (action === FIRETEAM_REVIEW_PATHS.CHAMPION) requestedPath = PATH_KEYS.CHAMPION;
+    else if (action === FIRETEAM_REVIEW_PATHS.ANCIENT) requestedPath = PATH_KEYS.ANCIENT;
 
     if (!requestedPath) {
       return interaction.reply({
         content: '⚠️ Invalid reassessment action.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2678,7 +2325,7 @@ if (action === 'approve') {
 
     await interaction.update({
       content:
-        ` **Reassessment Recorded**\n\n` +
+        `⚙️ **Reassessment Recorded**\n\n` +
         `You have requested **${selectedPathLabel}**.\n` +
         `Your request has been sent to High Command for judgment.`,
       components: disabledRows
@@ -2699,19 +2346,19 @@ if (action === 'approve') {
     return;
   }
 
-  // ================= SERGEANT REVIEW =================
+  // SERGEANT REVIEW
   if (interaction.customId.startsWith('sergeantreview:')) {
     if (!interaction.guild || !interaction.member) {
       return interaction.reply({
         content: '⚠️ This action may only be used inside the guild.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (!hasCommandAuthority(interaction.member)) {
       return interaction.reply({
         content: '⚠️ Only High Command, Captains, or Lieutenants may review Sergeant readiness.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2720,8 +2367,8 @@ if (action === 'approve') {
 
     if (!targetMember) {
       return interaction.reply({
-        content: '⚠️ Could not find that brother in the server.',
-        ephemeral: true
+        content: '⚠️ Could not find that brother in the server. They may have left.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2729,7 +2376,7 @@ if (action === 'approve') {
     if (!promoData.fireteamData.active) {
       return interaction.reply({
         content: '⚠️ That brother is not currently an active Fireteam Leader.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -2738,10 +2385,7 @@ if (action === 'approve') {
     if (action === 'ready') {
       updateUserPromotion(userId, current => ({
         ...current,
-        fireteamData: {
-          ...current.fireteamData,
-          sergeantReviewStatus: 'ready'
-        }
+        fireteamData: { ...current.fireteamData, sergeantReviewStatus: 'ready' }
       }));
 
       setApprovalState(userId, 'Sergeant', 'pending');
@@ -2766,187 +2410,117 @@ if (action === 'approve') {
       return;
     }
 
-   if (action === 'moretime') {
-  updateUserPromotion(userId, current => ({
-    ...current,
-    fireteamData: {
-      ...current.fireteamData,
-      sergeantReviewStatus: 'needs_more_time'
-    }
-  }));
+    if (action === 'moretime') {
+      updateUserPromotion(userId, current => ({
+        ...current,
+        fireteamData: { ...current.fireteamData, sergeantReviewStatus: 'needs_more_time' }
+      }));
 
-  try {
-    await targetMember.send(
-      `⚠️ **High Command has reviewed your service.**\n\n` +
-      `You have been marked as **Needs More Time** upon the Fireteam Leader path. Continue to prove yourself.`
-    );
-  } catch (error) {
-    console.error(`Could not DM ${targetMember.user.tag}:`, error);
-  }
-
-  await interaction.update({
-    content:
-      `⚠️ **Sergeant Review Complete**\n` +
-      `Brother <@${userId}> has been marked **Needs More Time**.\n` +
-      `Reviewed by ${interaction.user}.`,
-    components: disabledRows
-  });
-
-  return;
-}
-
- // ================= CHAMPION CHALLENGER =================
-if (interaction.customId.startsWith('champchallenger:')) {
-  if (!interaction.guild || !interaction.member) {
-    return interaction.reply({
-      content: '⚠️ This action may only be used inside the guild.',
-      ephemeral: true
-    });
-  }
-
-  if (!hasCommandAuthority(interaction.member)) {
-    return interaction.reply({
-      content: '⚠️ Only High Command, Captains, or Lieutenants may review Champion challengers.',
-      ephemeral: true
-    });
-  }
-
-  const [, action, userId] = interaction.customId.split(':');
-  const targetMember = await interaction.guild.members.fetch(userId).catch(() => null);
-
-  if (!targetMember) {
-    return interaction.reply({
-      content: '⚠️ Could not find that brother in the server.',
-      ephemeral: true
-    });
-  }
-
-  const promoData = getUserPromotion(userId);
-  const disabledRows = buildDisabledRowsFromMessage(interaction.message);
-
-  if (action === 'approve') {
-    updateUserPromotion(userId, current => ({
-      ...current,
-      trialData: {
-        ...current.trialData,
-        champion: {
-          ...current.trialData.champion,
-          challengerStatus: 'approved',
-          duelPending: true
-        }
+      try {
+        await targetMember.send(
+          `⚠️ **High Command has reviewed your service.**\n\n` +
+          `You have been marked as **Needs More Time** upon the Fireteam Leader path. Continue to prove yourself.`
+        );
+      } catch (error) {
+        console.error(`Could not DM ${targetMember.user.tag}:`, error);
       }
-    }));
 
-    try {
-      await targetMember.send(
-        `⚔️ **High Command has sanctioned your challenge.**\n\n` +
-        `You are now an approved challenger for the mantle of **Company Champion**.`
-      );
-    } catch (error) {
-      console.error(`Could not DM ${targetMember.user.tag}:`, error);
-    }
-
-    const highCommandChannel = interaction.guild.channels.cache.get(HIGH_COMMAND_CHANNEL_ID);
-    if (highCommandChannel) {
-      await highCommandChannel.send({
+      await interaction.update({
         content:
-          `⚔️ **Champion Duel Resolution Required**\n` +
-          `A sanctioned challenger now stands for the title: ${targetMember}\n` +
-          `Record the result of the challenge after it is complete.`,
-        components: [buildChampionDuelResolutionRow(userId)]
+          `⚠️ **Sergeant Review Complete**\n` +
+          `Brother <@${userId}> has been marked **Needs More Time**.\n` +
+          `Reviewed by ${interaction.user}.`,
+        components: disabledRows
+      });
+
+      return;
+    }
+  }
+
+  // CHAMPION CHALLENGER
+  if (interaction.customId.startsWith('champchallenger:')) {
+    if (!interaction.guild || !interaction.member) {
+      return interaction.reply({
+        content: '⚠️ This action may only be used inside the guild.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
-    await interaction.update({
-      content:
-        `✅ **Champion Challenger Approved**\n` +
-        `Brother <@${userId}> has been sanctioned as a challenger.\n` +
-        `Reviewed by ${interaction.user}.`,
-      components: disabledRows
-    });
-
-    return;
-  }
-
-  if (action === 'deny') {
-    updateUserPromotion(userId, current => ({
-      ...current,
-      trialData: {
-        ...current.trialData,
-        champion: {
-          ...current.trialData.champion,
-          challengerStatus: 'denied',
-          duelPending: false
-        }
-      }
-    }));
-
-    try {
-      await targetMember.send(
-        `⚠️ **High Command has rendered judgment.**\n\n` +
-        `Though your Champion trial was passed, you have **not** been sanctioned to challenge for the title at this time.`
-      );
-    } catch (error) {
-      console.error(`Could not DM ${targetMember.user.tag}:`, error);
+    if (!hasCommandAuthority(interaction.member)) {
+      return interaction.reply({
+        content: '⚠️ Only High Command, Captains, or Lieutenants may review Champion challengers.',
+        flags: MessageFlags.Ephemeral
+      });
     }
 
-    await interaction.update({
-      content:
-        `⚠️ **Champion Challenger Denied**\n` +
-        `Brother <@${userId}> has not been sanctioned as a challenger.\n` +
-        `Reviewed by ${interaction.user}.`,
-      components: disabledRows
-    });
+    const [, action, userId] = interaction.customId.split(':');
+    const targetMember = await interaction.guild.members.fetch(userId).catch(() => null);
 
-    return;
-  }
-
-  if (action === 'delay') {
-    updateUserPromotion(userId, current => ({
-      ...current,
-      trialData: {
-        ...current.trialData,
-        champion: {
-          ...current.trialData.champion,
-          challengerStatus: 'delayed',
-          duelPending: false
-        }
-      }
-    }));
-
-    try {
-      await targetMember.send(
-        `⚠️ **High Command has delayed your challenge.**\n\n` +
-        `Your right to challenge for the mantle of **Company Champion** has been delayed for a later date.`
-      );
-    } catch (error) {
-      console.error(`Could not DM ${targetMember.user.tag}:`, error);
+    if (!targetMember) {
+      return interaction.reply({
+        content: '⚠️ Could not find that brother in the server. They may have left.',
+        flags: MessageFlags.Ephemeral
+      });
     }
 
-    await interaction.update({
-      content:
-        `⚠️ **Champion Challenger Delayed**\n` +
-        `Brother <@${userId}> remains a pending challenger for a later date.\n` +
-        `Reviewed by ${interaction.user}.`,
-      components: disabledRows
-    });
+    const disabledRows = buildDisabledRowsFromMessage(interaction.message);
 
-    return;
-  }
-}
+    if (action === 'approve') {
+      updateUserPromotion(userId, current => ({
+        ...current,
+        trialData: {
+          ...current.trialData,
+          champion: {
+            ...current.trialData.champion,
+            challengerStatus: 'approved',
+            duelPending: true
+          }
+        }
+      }));
+
+      try {
+        await targetMember.send(
+          `⚔️ **High Command has sanctioned your challenge.**\n\n` +
+          `You are now an approved challenger for the mantle of **Company Champion**.`
+        );
+      } catch (error) {
+        console.error(`Could not DM ${targetMember.user.tag}:`, error);
+      }
+
+      const highCommandChannel = interaction.guild.channels.cache.get(HIGH_COMMAND_CHANNEL_ID);
+      if (highCommandChannel) {
+        await highCommandChannel.send({
+          content:
+            `⚔️ **Champion Duel Resolution Required**\n` +
+            `A sanctioned challenger now stands for the title: ${targetMember}\n` +
+            `Record the result of the challenge after it is complete.`,
+          components: [buildChampionDuelResolutionRow(userId)]
+        });
+      }
+
+      await interaction.update({
+        content:
+          `✅ **Champion Challenger Approved**\n` +
+          `Brother <@${userId}> has been sanctioned as a challenger.\n` +
+          `Reviewed by ${interaction.user}.`,
+        components: disabledRows
+      });
+
+      return;
+    }
 
     if (action === 'deny') {
- updateUserPromotion(userId, current => ({
-  ...current,
-  trialData: {
-    ...current.trialData,
-    champion: {
-      ...current.trialData.champion,
-      challengerStatus: 'delayed',
-      duelPending: false
-    }
-  }
-}));
+      updateUserPromotion(userId, current => ({
+        ...current,
+        trialData: {
+          ...current.trialData,
+          champion: {
+            ...current.trialData.champion,
+            challengerStatus: 'denied',
+            duelPending: false
+          }
+        }
+      }));
 
       try {
         await targetMember.send(
@@ -2984,7 +2558,7 @@ if (interaction.customId.startsWith('champchallenger:')) {
       try {
         await targetMember.send(
           `⚠️ **High Command has delayed your challenge.**\n\n` +
-          `Your Champion challenge has been placed on hold for later review.`
+          `Your right to challenge for the mantle of **Company Champion** has been delayed for a later date.`
         );
       } catch (error) {
         console.error(`Could not DM ${targetMember.user.tag}:`, error);
@@ -2993,7 +2567,7 @@ if (interaction.customId.startsWith('champchallenger:')) {
       await interaction.update({
         content:
           `⚠️ **Champion Challenger Delayed**\n` +
-          `Brother <@${userId}> has had the challenge delayed.\n` +
+          `Brother <@${userId}> remains a pending challenger for a later date.\n` +
           `Reviewed by ${interaction.user}.`,
         components: disabledRows
       });
@@ -3002,19 +2576,19 @@ if (interaction.customId.startsWith('champchallenger:')) {
     }
   }
 
-  // ================= CHAMPION DUEL RESOLUTION =================
+  // CHAMPION DUEL RESOLUTION
   if (interaction.customId.startsWith('champduel:')) {
     if (!interaction.guild || !interaction.member) {
       return interaction.reply({
         content: '⚠️ This action may only be used inside the guild.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (!hasCommandAuthority(interaction.member)) {
       return interaction.reply({
         content: '⚠️ Only High Command, Captains, or Lieutenants may resolve Champion duels.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -3023,8 +2597,8 @@ if (interaction.customId.startsWith('champchallenger:')) {
 
     if (!challenger) {
       return interaction.reply({
-        content: '⚠️ Could not find that challenger in the server.',
-        ephemeral: true
+        content: '⚠️ Could not find that challenger in the server. They may have left.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -3068,19 +2642,19 @@ if (interaction.customId.startsWith('champchallenger:')) {
       await awardExclusiveRole(challenger, COMPANY_CHAMPION_ROLE_ID);
       setUserTitle(challenger.id, 'Company Champion');
 
-updateUserPromotion(userId, current => ({
-  ...current,
-  trialData: {
-    ...current.trialData,
-    champion: {
-      ...current.trialData.champion,
-      challengerStatus: 'challenger_won',
-      duelPending: false,
-      active: false,
-      status: 'passed'
-    }
-  }
-}));
+      updateUserPromotion(userId, current => ({
+        ...current,
+        trialData: {
+          ...current.trialData,
+          champion: {
+            ...current.trialData.champion,
+            challengerStatus: 'challenger_won',
+            duelPending: false,
+            active: false,
+            status: 'passed'
+          }
+        }
+      }));
 
       if (currentChampion && currentChampion.id !== challenger.id) {
         setUserTitle(currentChampion.id, null);
@@ -3114,19 +2688,19 @@ updateUserPromotion(userId, current => ({
     }
   }
 
-  // ================= ANCIENT OCCUPANCY RESOLUTION =================
+  // ANCIENT OCCUPANCY RESOLUTION
   if (interaction.customId.startsWith('ancienttitle:')) {
     if (!interaction.guild || !interaction.member) {
       return interaction.reply({
         content: '⚠️ This action may only be used inside the guild.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (!hasCommandAuthority(interaction.member)) {
       return interaction.reply({
         content: '⚠️ Only High Command, Captains, or Lieutenants may decide Ancient title occupancy.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -3135,8 +2709,8 @@ updateUserPromotion(userId, current => ({
 
     if (!targetMember) {
       return interaction.reply({
-        content: '⚠️ Could not find that brother in the server.',
-        ephemeral: true
+        content: '⚠️ Could not find that brother in the server. They may have left.',
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -3147,10 +2721,7 @@ updateUserPromotion(userId, current => ({
         ...current,
         specialRoles: {
           ...current.specialRoles,
-          'Company Ancient': {
-            ...current.specialRoles['Company Ancient'],
-            status: 'reserve'
-          }
+          'Company Ancient': { ...current.specialRoles['Company Ancient'], status: 'reserve' }
         }
       }));
 
@@ -3182,10 +2753,7 @@ updateUserPromotion(userId, current => ({
         ...current,
         specialRoles: {
           ...current.specialRoles,
-          'Company Ancient': {
-            ...current.specialRoles['Company Ancient'],
-            status: 'appointed'
-          }
+          'Company Ancient': { ...current.specialRoles['Company Ancient'], status: 'appointed' }
         }
       }));
 
@@ -3221,10 +2789,7 @@ updateUserPromotion(userId, current => ({
         ...current,
         specialRoles: {
           ...current.specialRoles,
-          'Company Ancient': {
-            ...current.specialRoles['Company Ancient'],
-            status: 'reserve'
-          }
+          'Company Ancient': { ...current.specialRoles['Company Ancient'], status: 'reserve' }
         }
       }));
 
@@ -3250,204 +2815,160 @@ updateUserPromotion(userId, current => ({
   }
 });
 
-// ================= MESSAGE HANDLER =================
+// MESSAGE HANDLER
 
 client.on(Events.MessageCreate, async message => {
   if (message.author.bot || !message.guild) return;
 
-// ================= ARMORY SUBMISSION FLOW =================
+  // ARMORY SUBMISSION FLOW
+  const armorySubmission = getArmorySubmission(message.author.id);
 
-const armorySubmission = getArmorySubmission(message.author.id);
+  if (armorySubmission) {
+    if (!message.member) return;
 
-if (armorySubmission) {
+    if (!isArmoryManager(message.member)) {
+      clearArmorySubmission(message.author.id);
+      return message.reply('⚠️ Your armory submission session has been cleared.');
+    }
 
-  
-  if (!message.member) return;
+    if (message.channel.id !== FORGE_CHANNEL_ID) {
+      return message.reply(`⚠️ Continue your armory submission in <#${FORGE_CHANNEL_ID}>.`);
+    }
 
-  if (!isArmoryManager(message.member)) {
-    clearArmorySubmission(message.author.id);
-    return message.reply('⚠️ Your armory submission session has been cleared.');
-  }
+    if (armorySubmission.step === 'awaiting_image') {
+      const attachment = message.attachments.first();
+      if (!attachment || !attachment.contentType?.startsWith('image/')) {
+        return message.reply('⚠️ Upload a valid image for the armor piece to continue the forge process.');
+      }
+      armorySubmission.imageUrl = attachment.url;
+      armorySubmission.step = 'awaiting_name';
+      return message.reply('⚙️ Image received.\n\nWhat is the name of this armor piece?');
+    }
 
-  if (message.channel.id !== FORGE_CHANNEL_ID) {
-    return message.reply(`⚠️ Continue your armory submission in <#${FORGE_CHANNEL_ID}>.`);
-  }
-
-  // STEP 1: IMAGE
-  if (armorySubmission.step === 'awaiting_image') {
-    const attachment = message.attachments.first();
-
-    if (!attachment || !attachment.contentType?.startsWith('image/')) {
+    if (armorySubmission.step === 'awaiting_name') {
+      const itemName = message.content.trim();
+      if (!itemName || itemName.length < 2) {
+        return message.reply('⚠️ Enter a valid armor piece name.');
+      }
+      armorySubmission.itemName = itemName;
+      armorySubmission.step = 'awaiting_category';
       return message.reply(
-        '⚠️ Upload a valid image for the armor piece to continue the forge process.'
+        `⚙️ Name recorded: **${itemName}**\n\n` +
+        `Now enter a category from the following list:\n` +
+        `${ARMORY_CATEGORIES.map(cat => `• ${cat}`).join('\n')}`
       );
     }
 
-    armorySubmission.imageUrl = attachment.url;
-    armorySubmission.step = 'awaiting_name';
-
-    return message.reply(
-      '⚙️ Image received.\n\nWhat is the name of this armor piece?'
-    );
-  }
-
-  // STEP 2: NAME
-  if (armorySubmission.step === 'awaiting_name') {
-    const itemName = message.content.trim();
-
-    if (!itemName || itemName.length < 2) {
-      return message.reply('⚠️ Enter a valid armor piece name.');
+    if (armorySubmission.step === 'awaiting_category') {
+      const inputCategory = message.content.trim().toLowerCase();
+      const matchedCategory = ARMORY_CATEGORIES.find(cat => cat.toLowerCase() === inputCategory);
+      if (!matchedCategory) {
+        return message.reply(
+          `⚠️ Invalid category.\nChoose one of:\n${ARMORY_CATEGORIES.map(cat => `• ${cat}`).join('\n')}`
+        );
+      }
+      armorySubmission.category = matchedCategory;
+      armorySubmission.step = 'awaiting_price';
+      return message.reply(`⚙️ Category recorded: **${matchedCategory}**\n\nWhat is the armory data price for this item?`);
     }
 
-    armorySubmission.itemName = itemName;
-    armorySubmission.step = 'awaiting_category';
+    if (armorySubmission.step === 'awaiting_price') {
+      const price = parseInt(message.content.trim(), 10);
+      if (Number.isNaN(price) || price <= 0) {
+        return message.reply('⚠️ Enter a valid price greater than 0.');
+      }
+      armorySubmission.price = price;
+      armorySubmission.step = 'awaiting_stock';
+      return message.reply(`⚙️ Price recorded: **${price} Armory Data**\n\nHow many are available in stock?`);
+    }
 
-    return message.reply(
-      `⚙️ Name recorded: **${itemName}**\n\n` +
-      `Now enter a category from the following list:\n` +
-      `${ARMORY_CATEGORIES.map(cat => `• ${cat}`).join('\n')}`
-    );
+    if (armorySubmission.step === 'awaiting_stock') {
+      const stock = parseInt(message.content.trim(), 10);
+      if (Number.isNaN(stock) || stock <= 0) {
+        return message.reply('⚠️ Enter a valid stock amount greater than 0.');
+      }
+      armorySubmission.stock = stock;
+      armorySubmission.step = 'pending_review';
+      return message.reply({
+        content: '⚙️ Armory item ready for review.',
+        embeds: [buildArmoryReviewEmbed(armorySubmission, message.member)],
+        components: [buildArmoryReviewRow(message.author.id)]
+      });
+    }
+
+    return;
   }
 
-  // STEP 3: CATEGORY
-  if (armorySubmission.step === 'awaiting_category') {
-    const inputCategory = message.content.trim().toLowerCase();
+  // ARMORY PANEL DEPLOY
+  if (message.content === '!armorypanel') {
+    if (!message.guild || !message.member) return;
 
-    const matchedCategory = ARMORY_CATEGORIES.find(
-      cat => cat.toLowerCase() === inputCategory
-    );
+    if (!isArmoryManager(message.member)) {
+      return message.reply('⚠️ Only authorized forge staff may deploy the armory panel.');
+    }
 
-    if (!matchedCategory) {
-      return message.reply(
-        `⚠️ Invalid category.\nChoose one of:\n${ARMORY_CATEGORIES.map(cat => `• ${cat}`).join('\n')}`
+    if (message.channel.id !== FORGE_CHANNEL_ID) {
+      return message.reply(`⚠️ Deploy the armory panel in <#${FORGE_CHANNEL_ID}>.`);
+    }
+
+    const pinnedMessages = await message.channel.messages.fetchPinned().catch(() => null);
+
+    if (pinnedMessages) {
+      const existingPanel = pinnedMessages.find(msg =>
+        msg.author.id === client.user.id &&
+        msg.content.includes('Forge Armory Control Panel')
       );
+
+      if (existingPanel) {
+        return message.reply('⚠️ An Armory Forge panel is already pinned in this channel.');
+      }
     }
 
-    armorySubmission.category = matchedCategory;
-    armorySubmission.step = 'awaiting_price';
-
-    return message.reply(
-      `⚙️ Category recorded: **${matchedCategory}**\n\n` +
-      `What is the armory data price for this item?`
-    );
-  }
-
-  // STEP 4: PRICE
-  if (armorySubmission.step === 'awaiting_price') {
-    const price = parseInt(message.content.trim(), 10);
-
-    if (Number.isNaN(price) || price <= 0) {
-      return message.reply('⚠️ Enter a valid price greater than 0.');
-    }
-
-    armorySubmission.price = price;
-    armorySubmission.step = 'awaiting_stock';
-
-    return message.reply(
-      `⚙️ Price recorded: **${price} Armory Data**\n\n` +
-      `How many are available in stock?`
-    );
-  }
-
-  // STEP 5: STOCK
-  if (armorySubmission.step === 'awaiting_stock') {
-    const stock = parseInt(message.content.trim(), 10);
-
-    if (Number.isNaN(stock) || stock <= 0) {
-      return message.reply('⚠️ Enter a valid stock amount greater than 0.');
-    }
-
-    armorySubmission.stock = stock;
-    armorySubmission.step = 'pending_review';
-
-    return message.reply({
-      content: '⚙️ Armory item ready for review.',
-      embeds: [buildArmoryReviewEmbed(armorySubmission, message.member)],
-      components: [buildArmoryReviewRow(message.author.id)]
+    const panelMessage = await message.channel.send({
+      content:
+        '⚙️ **Forge Armory Control Panel**\n\n' +
+        'Authorized brothers may begin the item-forging process below.',
+      components: [buildArmoryForgeRow()]
     });
-  }
-}
 
- // ================= ARMORY PANEL DEPLOY =================
-if (message.content === '!armorypanel') {
-  if (!message.guild || !message.member) return;
-
-  if (!isArmoryManager(message.member)) {
-    return message.reply('⚠️ Only authorized forge staff may deploy the armory panel.');
+    await panelMessage.pin().catch(err => console.error('Failed to pin armory panel:', err));
+    return message.reply('✅ Armory Forge panel deployed and pinned.');
   }
 
-  if (message.channel.id !== FORGE_CHANNEL_ID) {
-    return message.reply(`⚠️ Deploy the armory panel in <#${FORGE_CHANNEL_ID}>.`);
+  // ARMORY DATA CHECK
+  if (message.content === '!armorydata') {
+    const balance = getUserArmoryData(message.author.id);
+    return message.reply(`⚙️ **Armory Data Reserve**\nYou currently possess **${balance} Armory Data**.`);
   }
-
-  const pinnedMessages = await message.channel.messages.fetchPinned().catch(() => null);
-
-  if (pinnedMessages) {
-    const existingPanel = pinnedMessages.find(msg =>
-      msg.author.id === client.user.id &&
-      msg.content.includes('Forge Armory Control Panel')
-    );
-
-    if (existingPanel) {
-      return message.reply('⚠️ An Armory Forge panel is already pinned in this channel.');
-    }
-  }
-
-  const panelMessage = await message.channel.send({
-    content:
-      '⚙️ **Forge Armory Control Panel**\n\n' +
-      'Authorized brothers may begin the item-forging process below.',
-    components: [buildArmoryForgeRow()]
-  });
-
-  await panelMessage.pin().catch(err =>
-    console.error('Failed to pin armory panel:', err)
-  );
-
-  return message.reply('✅ Armory Forge panel deployed and pinned.');
-}
-
-// ================= ARMORY DATA CHECK =================
-if (message.content === '!armorydata') {
-  const balance = getUserArmoryData(message.author.id);
-
-  return message.reply(
-    `⚙️ **Armory Data Reserve**\nYou currently possess **${balance} Armory Data**.`
-  );
-}
 
   if (message.content === '!ping') {
     return message.reply('Pong!');
   }
 
+  // FIXED: was referencing undefined 'thirstLore', now correctly uses 'fleshLore'
   if (message.content === '!flesh') {
-    const randomLore = thirstLore[Math.floor(Math.random() * fleshLore.length)];
+    const randomLore = fleshLore[Math.floor(Math.random() * fleshLore.length)];
     return message.reply(randomLore);
   }
 
-if (message.content === '!help') {
-  const embed = new EmbedBuilder()
-    .setTitle('⚙️ Machine Spirit Guidance Menu')
-    .setDescription(
-      'Select a category below to view available functions.\n\n' +
-      'Basic guidance is available to all brothers.\n' +
-      'Command functions are restricted to authorized officers.'
-    );
+  if (message.content === '!help') {
+    const embed = new EmbedBuilder()
+      .setTitle('⚙️ Machine Spirit Guidance Menu')
+      .setDescription(
+        'Select a category below to view available functions.\n\n' +
+        'Basic guidance is available to all brothers.\n' +
+        'Command functions are restricted to authorized officers.'
+      );
 
-  const rows = [buildBasicHelpRow()];
+    const rows = [buildBasicHelpRow()];
+    if (hasCommandAuthority(message.member)) rows.push(buildAdminHelpRow());
 
-  if (hasCommandAuthority(message.member)) {
-    rows.push(buildAdminHelpRow());
+    return message.reply({ embeds: [embed], components: rows });
   }
 
-  return message.reply({
-    embeds: [embed],
-    components: rows
-  });
-}
   if (message.content === '!uniform') {
     return message.reply(
-      ' **Uniform Guidance**\n' +
+      '⚙️ **Uniform Guidance**\n' +
       `All Brothers must review the uniform standards in <#${UNIFORM_CHANNEL_ID}>.\n` +
       'Ensure your appearance matches chapter regulations before deployment.'
     );
@@ -3464,20 +2985,17 @@ if (message.content === '!help') {
       'Geneseed:\n' +
       'Armory Data:\n' +
       '"Picture of Victory screen and Stats screen"\n\n' +
-
       '**PvE Siege**\n' +
       'Members: @Brother1 @Brother2\n' +
       'Difficulty: @Normal Siege Mode / @Hard Siege Mode\n' +
       'Waves: 10/20/30\n' +
       '"Picture of Victory screen and Stats screen"\n\n' +
-
       '**PvE Stratagem**\n' +
       'Difficulty: @Normal Stratagem / @Hard Stratagem\n' +
       'Members: @Brother1 @Brother2\n' +
       'Geneseed:\n' +
       'Armory Data:\n' +
       '"Picture of Victory screen and Stats screen"\n\n' +
-
       '**PvP Eternal War**\n' +
       'Status: @Victory / @Defeat\n' +
       'Members: @Brother1 @Brother2\n' +
@@ -3533,7 +3051,6 @@ if (message.content === '!help') {
 
   if (message.content === '!progression') {
     const promoData = getUserPromotion(message.author.id);
-
     return message.reply(
       `⚙️ **Progression Path Record for ${message.author.username}** ⚙️\n` +
       `**Choice Offered:** ${promoData.progressionChoiceOffered}\n` +
@@ -3552,122 +3069,91 @@ if (message.content === '!help') {
     );
   }
 
-// ================= TRIAL + AAR CHANNEL SYSTEM =================
-if (
-  message.channel.id === TRIAL_CHANNEL_ID &&
-  message.content.length >= MIN_AAR_LENGTH
-) {
-  const creditedMembers = getCreditedMembers(message);
+  // TRIAL CHANNEL SYSTEM
+  if (message.channel.id === TRIAL_CHANNEL_ID && message.content.length >= MIN_AAR_LENGTH) {
+    const creditedMembers = getCreditedMembers(message);
 
-  // Require at least 2 people (candidate + overseer)
-  if (creditedMembers.length < 2) {
+    if (creditedMembers.length < 2) {
+      return message.reply('⚠️ Trial reports must include at least one overseeing brother (Veteran Sergeant or higher).');
+    }
+
+    const signature = getAARSignature(message, creditedMembers);
+    if (isDuplicateAAR(signature)) {
+      return message.reply('⚠️ This trial report has already been recorded in the Chapter archives.');
+    }
+
+    storeAAR(signature, message.id);
+
+    const candidate = creditedMembers[0];
+    const promoData = getUserPromotion(candidate.id);
+
+    if (!promoData.trialData.champion.active && !promoData.trialData.ancient.active) {
+      return message.reply('⚠️ This brother does not currently have an active trial.');
+    }
+
     return message.reply(
-      '⚠️ Trial reports must include at least one overseeing brother (Veteran Sergeant or higher).'
+      `📜 **Trial Report Logged**\n` +
+      `Brother ${candidate} has submitted a **trial report**.\n\n` +
+      `⚠️ AAR points are **not awarded** for trial reports.\n` +
+      `High Command must review this trial using commands.`
     );
   }
 
-  // Prevent duplicate trial logs
-  const signature = getAARSignature(message, creditedMembers);
-  if (isDuplicateAAR(signature)) {
-    return message.reply(
-      '⚠️ This trial report has already been recorded in the Chapter archives.'
+  // NORMAL AAR SYSTEM
+  if (message.channel.id === AAR_CHANNEL_ID && message.content.length >= MIN_AAR_LENGTH) {
+    const creditedMembers = getCreditedMembers(message);
+    const signature = getAARSignature(message, creditedMembers);
+
+    if (isDuplicateAAR(signature)) {
+      return message.reply('⚠️ This AAR has already been recorded in the Chapter archives. Duplicate reports will not be credited.');
+    }
+
+    const aarData = getAARData(message);
+    const earnedPoints = aarData.points;
+
+    if (earnedPoints <= 0) {
+      return message.reply('⚠️ The Machine Spirit could not determine a valid point value from this AAR. Ensure the correct AAR type and required difficulty or status tags were used.');
+    }
+
+    storeAAR(signature, message.id);
+
+    for (const member of creditedMembers) {
+      const oldPoints = getUserXP(member.id);
+      const oldTrackedRank = getUserPromotion(member.id).eligibleRank || getRank(oldPoints).name;
+      const newTotal = addUserXP(member.id, earnedPoints);
+      await handleRankThresholdChange(message.guild, member, oldTrackedRank, oldPoints, newTotal);
+    }
+
+    const creditedList = creditedMembers.map(member => `${member}`).join(', ');
+
+    await message.reply(
+      `📜 **AAR Logged**\n` +
+      `**Type:** ${aarData.type}\n` +
+      `**Points Awarded:** ${earnedPoints}\n` +
+      `**Credited Brothers:** ${creditedList}`
     );
+
+    await message.reply({
+      content:
+        `⚙️ **Armory Data Recovery Check**\n` +
+        `Select the Armory Data recovered from this mission.`,
+      components: [buildArmoryDataRewardRow(message.id)]
+    });
+
+    return;
   }
 
-  storeAAR(signature, message.id);
+  // COMMAND HANDLERS (High Command channel only where required)
 
-  // Identify candidate (first mentioned OR author fallback)
-  const candidate = creditedMembers[0];
-  const promoData = getUserPromotion(candidate.id);
-
-  // Check if they are actually in a trial
-  if (
-    !promoData.trialData.champion.active &&
-    !promoData.trialData.ancient.active
-  ) {
-    return message.reply(
-      '⚠️ This brother does not currently have an active trial.'
-    );
-  }
-
-  // NO XP GIVEN IN TRIAL CHANNEL
-  return message.reply(
-    `📜 **Trial Report Logged**\n` +
-    `Brother ${candidate} has submitted a **trial report**.\n\n` +
-    `⚠️ AAR points are **not awarded** for trial reports.\n` +
-    `High Command must review this trial using commands.`
-  );
-}
-
-// ================= NORMAL AAR SYSTEM =================
-if (
-  message.channel.id === AAR_CHANNEL_ID &&
-  message.content.length >= MIN_AAR_LENGTH
-) {
-  const creditedMembers = getCreditedMembers(message);
-  const signature = getAARSignature(message, creditedMembers);
-
-  if (isDuplicateAAR(signature)) {
-    return message.reply(
-      '⚠️ This AAR has already been recorded in the Chapter archives. Duplicate reports will not be credited.'
-    );
-  }
-
-  const aarData = getAARData(message);
-  const earnedPoints = aarData.points;
-
-  if (earnedPoints <= 0) {
-    return message.reply(
-      '⚠️ The Machine Spirit could not determine a valid point value from this AAR. Ensure the correct AAR type and required difficulty or status tags were used.'
-    );
-  }
-
-  storeAAR(signature, message.id);
-
-  for (const member of creditedMembers) {
-    const oldPoints = getUserXP(member.id);
-    const oldTrackedRank =
-      getUserPromotion(member.id).eligibleRank || getRank(oldPoints).name;
-    const newTotal = addUserXP(member.id, earnedPoints);
-
-    await handleRankThresholdChange(
-      message.guild,
-      member,
-      oldTrackedRank,
-      oldPoints,
-      newTotal
-    );
-  }
-
-  const creditedList = creditedMembers.map(member => `${member}`).join(', ');
-  const aarType = aarData.type;
-
-await message.reply(
-  `📜 **AAR Logged**\n` +
-  `**Type:** ${aarType}\n` +
-  `**Points Awarded:** ${earnedPoints}\n` +
-  `**Credited Brothers:** ${creditedList}`
-);
-
-return message.reply({
-  content:
-    `⚙️ **Armory Data Recovery Check**\n` +
-    `Select the Armory Data recovered from this mission.`,
-  components: [buildArmoryDataRewardRow(message.id)]
-});
-
-  // ================= SYNC ALL RANKS =================
   if (message.content === '!syncallranks') {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may run this command.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ This command may only be used in the High Command channel.');
     }
 
     await message.guild.members.fetch();
-
     const rebuiltData = {};
     let processed = 0;
 
@@ -3675,10 +3161,7 @@ return message.reply({
       if (member.user.bot) continue;
 
       const existing = getUserPromotion(member.id);
-
-      const isHighCommand = HIGH_COMMAND_ROLE_IDS.some(roleId =>
-        member.roles.cache.has(roleId)
-      );
+      const isHighCommand = HIGH_COMMAND_ROLE_IDS.some(roleId => member.roles.cache.has(roleId));
 
       if (isHighCommand) {
         rebuiltData[member.id] = {
@@ -3693,9 +3176,7 @@ return message.reply({
       }
 
       let detectedRank = getHighestManagedRankFromMember(member);
-      if (!detectedRank) {
-        detectedRank = 'Aspirant';
-      }
+      if (!detectedRank) detectedRank = 'Aspirant';
 
       rebuiltData[member.id] = {
         ...existing,
@@ -3704,12 +3185,10 @@ return message.reply({
         pendingApprovalRank: null,
         approvalStatus: null
       };
-
       processed++;
     }
 
     savePromotionData(rebuiltData);
-
     return message.reply(
       `✅ Rank sync complete.\n` +
       `Processed **${processed} members**.\n` +
@@ -3717,28 +3196,21 @@ return message.reply({
     );
   }
 
-  // ================= APPROVE COMMAND =================
   if (message.content.startsWith('!approve')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may approve promotions.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Approvals may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-
-    if (!target) {
-      return message.reply('Usage: !approve @user');
-    }
+    if (!target) return message.reply('Usage: !approve @user');
 
     const promoData = getUserPromotion(target.id);
     const pendingRank = promoData.pendingApprovalRank;
 
-    if (!pendingRank) {
-      return message.reply(`⚠️ ${target} has no pending approval rank.`);
-    }
+    if (!pendingRank) return message.reply(`⚠️ ${target} has no pending approval rank.`);
 
     setOfficialRank(target.id, pendingRank);
     clearApprovalState(target.id);
@@ -3757,37 +3229,28 @@ return message.reply({
 
     const channel = message.guild.channels.cache.get(GENERAL_CHANNEL_ID);
     if (channel) {
-      const template =
-        promotionMessages[pendingRank] ||
-        '⚔️ {user} has been elevated within the Chapter.';
+      const template = promotionMessages[pendingRank] || '⚔️ {user} has been elevated within the Chapter.';
       await channel.send(template.replace('{user}', `${target}`));
     }
 
     return message.reply(`✅ ${target} has been approved for **${pendingRank}**.`);
   }
 
-  // ================= DENY COMMAND =================
   if (message.content.startsWith('!deny')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may deny promotions.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Denials may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-
-    if (!target) {
-      return message.reply('Usage: !deny @user');
-    }
+    if (!target) return message.reply('Usage: !deny @user');
 
     const promoData = getUserPromotion(target.id);
     const pendingRank = promoData.pendingApprovalRank;
 
-    if (!pendingRank) {
-      return message.reply(`⚠️ ${target} has no pending approval rank.`);
-    }
+    if (!pendingRank) return message.reply(`⚠️ ${target} has no pending approval rank.`);
 
     setApprovalState(target.id, null, 'denied');
 
@@ -3807,39 +3270,29 @@ return message.reply({
     );
   }
 
-  // ================= SETTITLE COMMAND =================
   if (message.content.startsWith('!settitle')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may set titles.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Title adjustments may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-
-    if (!target) {
-      return message.reply('Usage: !settitle @user TitleName');
-    }
+    if (!target) return message.reply('Usage: !settitle @user TitleName');
 
     const raw = message.content.replace('!settitle', '').trim();
     const withoutMention = raw.replace(/<@!?\d+>/, '').trim();
     const title = withoutMention || null;
 
     setUserTitle(target.id, title);
-
-    return message.reply(
-      `🏛️ ${target} now has the title: **${title || 'None'}**`
-    );
+    return message.reply(`🏛️ ${target} now has the title: **${title || 'None'}**`);
   }
 
-  // ================= PROMOTE COMMAND =================
   if (message.content.startsWith('!promote')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may issue promotions.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Promotions may only be issued in the High Command channel.');
     }
@@ -3848,15 +3301,10 @@ return message.reply({
     const target = message.mentions.members.first();
     const rankName = args.slice(2).join(' ');
 
-    if (!target || !rankName) {
-      return message.reply('Usage: !promote @user RankName');
-    }
+    if (!target || !rankName) return message.reply('Usage: !promote @user RankName');
 
     const rank = rankData.find(r => r.name.toLowerCase() === rankName.toLowerCase());
-
-    if (!rank) {
-      return message.reply('⚠️ Invalid rank.');
-    }
+    if (!rank) return message.reply('⚠️ Invalid rank.');
 
     setEligibleRank(target.id, rank.name);
     setOfficialRank(target.id, rank.name);
@@ -3873,21 +3321,17 @@ return message.reply({
 
     const channel = message.guild.channels.cache.get(GENERAL_CHANNEL_ID);
     if (channel) {
-      const template =
-        promotionMessages[rank.name] ||
-        '⚔️ {user} has been elevated within the Chapter.';
+      const template = promotionMessages[rank.name] || '⚔️ {user} has been elevated within the Chapter.';
       await channel.send(template.replace('{user}', `${target}`));
     }
 
     return message.reply(`✅ ${target} has been promoted to **${rank.name}**.`);
   }
 
-  // ================= DEMOTE COMMAND =================
   if (message.content.startsWith('!demote')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may issue demotions.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Demotions may only be issued in the High Command channel.');
     }
@@ -3896,15 +3340,10 @@ return message.reply({
     const target = message.mentions.members.first();
     const rankName = args.slice(2).join(' ');
 
-    if (!target || !rankName) {
-      return message.reply('Usage: !demote @user RankName');
-    }
+    if (!target || !rankName) return message.reply('Usage: !demote @user RankName');
 
     const rank = rankData.find(r => r.name.toLowerCase() === rankName.toLowerCase());
-
-    if (!rank) {
-      return message.reply('⚠️ Invalid rank.');
-    }
+    if (!rank) return message.reply('⚠️ Invalid rank.');
 
     setEligibleRank(target.id, rank.name);
     setOfficialRank(target.id, rank.name);
@@ -3923,20 +3362,16 @@ return message.reply({
 
     const channel = message.guild.channels.cache.get(GENERAL_CHANNEL_ID);
     if (channel) {
-      await channel.send(
-        `⚠️ ${target} has been reassigned to **${rank.name}** by High Command.`
-      );
+      await channel.send(`⚠️ ${target} has been reassigned to **${rank.name}** by High Command.`);
     }
 
     return message.reply(`⚠️ ${target} has been demoted to **${rank.name}**.`);
   }
 
-  // ================= SETPOINTS COMMAND =================
   if (message.content.startsWith('!setpoints')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may set AAR points.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ AAR point adjustments may only be issued in the High Command channel.');
     }
@@ -3945,33 +3380,20 @@ return message.reply({
     const target = message.mentions.members.first();
     const amount = parseInt(args[2], 10);
 
-    if (!target || Number.isNaN(amount) || amount < 0) {
-      return message.reply('Usage: !setpoints @user amount');
-    }
+    if (!target || Number.isNaN(amount) || amount < 0) return message.reply('Usage: !setpoints @user amount');
 
     const oldPoints = getUserXP(target.id);
     const oldTrackedRank = getUserPromotion(target.id).eligibleRank || getRank(oldPoints).name;
     const newTotal = setUserXP(target.id, amount);
 
-    await handleRankThresholdChange(
-      message.guild,
-      target,
-      oldTrackedRank,
-      oldPoints,
-      newTotal
-    );
-
-    return message.reply(
-      `📜 ${target} now holds **${newTotal} AAR points** in the Chapter records.`
-    );
+    await handleRankThresholdChange(message.guild, target, oldTrackedRank, oldPoints, newTotal);
+    return message.reply(`📜 ${target} now holds **${newTotal} AAR points** in the Chapter records.`);
   }
 
-  // ================= ADDPOINTS COMMAND =================
   if (message.content.startsWith('!addpoints')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may adjust AAR points.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ AAR point adjustments may only be issued in the High Command channel.');
     }
@@ -3980,34 +3402,23 @@ return message.reply({
     const target = message.mentions.members.first();
     const amount = parseInt(args[2], 10);
 
-    if (!target || Number.isNaN(amount) || amount < 0) {
-      return message.reply('Usage: !addpoints @user amount');
-    }
+    if (!target || Number.isNaN(amount) || amount < 0) return message.reply('Usage: !addpoints @user amount');
 
     const oldPoints = getUserXP(target.id);
     const oldTrackedRank = getUserPromotion(target.id).eligibleRank || getRank(oldPoints).name;
     const newTotal = addUserXP(target.id, amount);
 
-    await handleRankThresholdChange(
-      message.guild,
-      target,
-      oldTrackedRank,
-      oldPoints,
-      newTotal
-    );
-
+    await handleRankThresholdChange(message.guild, target, oldTrackedRank, oldPoints, newTotal);
     return message.reply(
       `📜 ${target} has been granted **${amount} AAR points**.\n` +
       `New total: **${newTotal}**`
     );
   }
 
-  // ================= REMOVEPOINTS COMMAND =================
   if (message.content.startsWith('!removepoints')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may adjust AAR points.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ AAR point adjustments may only be issued in the High Command channel.');
     }
@@ -4016,62 +3427,41 @@ return message.reply({
     const target = message.mentions.members.first();
     const amount = parseInt(args[2], 10);
 
-    if (!target || Number.isNaN(amount) || amount < 0) {
-      return message.reply('Usage: !removepoints @user amount');
-    }
+    if (!target || Number.isNaN(amount) || amount < 0) return message.reply('Usage: !removepoints @user amount');
 
     const oldPoints = getUserXP(target.id);
     const oldTrackedRank = getUserPromotion(target.id).eligibleRank || getRank(oldPoints).name;
     const newTotal = removeUserXP(target.id, amount);
 
-    await handleRankThresholdChange(
-      message.guild,
-      target,
-      oldTrackedRank,
-      oldPoints,
-      newTotal
-    );
-
+    await handleRankThresholdChange(message.guild, target, oldTrackedRank, oldPoints, newTotal);
     return message.reply(
       `📜 ${amount} AAR points have been removed from ${target}.\n` +
       `New total: **${newTotal}**`
     );
   }
 
-  // ================= SETRANK COMMAND =================
   if (message.content.startsWith('!setrank')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may set ranks.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Rank adjustments may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-
-    if (!target) {
-      return message.reply('Usage: !setrank @user trackedRank | officialRank');
-    }
+    if (!target) return message.reply('Usage: !setrank @user trackedRank | officialRank');
 
     const raw = message.content.replace('!setrank', '').trim();
     const withoutMention = raw.replace(/<@!?\d+>/, '').trim();
     const parts = withoutMention.split('|').map(part => part.trim());
 
-    if (parts.length < 1 || !parts[0]) {
-      return message.reply('Usage: !setrank @user trackedRank | officialRank');
-    }
+    if (parts.length < 1 || !parts[0]) return message.reply('Usage: !setrank @user trackedRank | officialRank');
 
     const trackedRank = parts[0];
     const officialRank = parts[1] || parts[0];
 
-    const validTrackedRank = rankData.find(
-      r => r.name.toLowerCase() === trackedRank.toLowerCase()
-    );
-
-    if (!validTrackedRank) {
-      return message.reply('⚠️ Invalid tracked rank.');
-    }
+    const validTrackedRank = rankData.find(r => r.name.toLowerCase() === trackedRank.toLowerCase());
+    if (!validTrackedRank) return message.reply('⚠️ Invalid tracked rank.');
 
     setEligibleRank(target.id, validTrackedRank.name);
     setOfficialRank(target.id, officialRank);
@@ -4085,21 +3475,16 @@ return message.reply({
     );
   }
 
-  // ================= PHASE 3 COMMANDS =================
-
   if (message.content.startsWith('!fireteamreview')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may send Fireteam review prompts.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Fireteam review prompts may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-    if (!target) {
-      return message.reply('Usage: !fireteamreview @user');
-    }
+    if (!target) return message.reply('Usage: !fireteamreview @user');
 
     const promoData = getUserPromotion(target.id);
     if (!promoData.fireteamData.active) {
@@ -4108,16 +3493,13 @@ return message.reply({
 
     updateUserPromotion(target.id, current => ({
       ...current,
-      fireteamData: {
-        ...current.fireteamData,
-        reassessmentDue: true
-      }
+      fireteamData: { ...current.fireteamData, reassessmentDue: true }
     }));
 
     try {
       await target.send({
         content:
-          ` **Fireteam Reassessment**\n\n` +
+          `⚙️ **Fireteam Reassessment**\n\n` +
           `Brother, time has passed and your service as **Fireteam Leader** is once again under review.\n` +
           `Do you wish to remain upon this path, or do you seek Company Champion or Company Ancient trials?`,
         components: [buildFireteamReassessmentRow(target.id)]
@@ -4134,15 +3516,12 @@ return message.reply({
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may issue Sergeant reviews.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Sergeant reviews may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-    if (!target) {
-      return message.reply('Usage: !sergeantreview @user');
-    }
+    if (!target) return message.reply('Usage: !sergeantreview @user');
 
     const promoData = getUserPromotion(target.id);
     if (!promoData.fireteamData.active) {
@@ -4161,16 +3540,13 @@ return message.reply({
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may submit Champion trial reports.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Champion trial reports may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
     if (!target) {
-      return message.reply(
-        'Usage: !championreport @user | overseer rank | class | mode | difficulty | wave | extracted yes/no | extremis kills | success/fail'
-      );
+      return message.reply('Usage: !championreport @user | overseer rank | class | mode | difficulty | wave | extracted yes/no | extremis kills | success/fail');
     }
 
     const raw = message.content.replace('!championreport', '').trim();
@@ -4178,9 +3554,7 @@ return message.reply({
     const parts = withoutMention.split('|').map(part => part.trim());
 
     if (parts.length < 8) {
-      return message.reply(
-        'Usage: !championreport @user | overseer rank | class | mode | difficulty | wave | extracted yes/no | extremis kills | success/fail'
-      );
+      return message.reply('Usage: !championreport @user | overseer rank | class | mode | difficulty | wave | extracted yes/no | extremis kills | success/fail');
     }
 
     const [overseerRank, classUsed, mode, difficulty, waveText, extractedText, extremisText, successText] = parts;
@@ -4199,11 +3573,9 @@ return message.reply({
       classUsed.toLowerCase() === 'bulwark' &&
       mode.toLowerCase() === 'siege' &&
       difficulty.toLowerCase() === 'hard' &&
-      !Number.isNaN(wave) &&
-      wave >= 15 &&
+      !Number.isNaN(wave) && wave >= 15 &&
       extracted === true &&
-      !Number.isNaN(extremisKills) &&
-      extremisKills >= 40 &&
+      !Number.isNaN(extremisKills) && extremisKills >= 40 &&
       success === true;
 
     if (!valid) {
@@ -4216,14 +3588,7 @@ return message.reply({
             active: false,
             status: 'failed',
             lastReport: {
-              overseerRank,
-              classUsed,
-              mode,
-              difficulty,
-              wave,
-              extracted,
-              extremisKills,
-              success,
+              overseerRank, classUsed, mode, difficulty, wave, extracted, extremisKills, success,
               submittedAt: new Date().toISOString(),
               channelId: message.channel.id
             }
@@ -4247,14 +3612,7 @@ return message.reply({
           active: false,
           status: 'passed',
           lastReport: {
-            overseerRank,
-            classUsed,
-            mode,
-            difficulty,
-            wave,
-            extracted,
-            extremisKills,
-            success,
+            overseerRank, classUsed, mode, difficulty, wave, extracted, extremisKills, success,
             submittedAt: new Date().toISOString(),
             channelId: message.channel.id
           }
@@ -4273,16 +3631,13 @@ return message.reply({
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may submit Ancient trial reports.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Ancient trial reports may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
     if (!target) {
-      return message.reply(
-        'Usage: !ancientreport @user | operation | overseer rank | class | difficulty | squad1,squad2,squad3 | noDowns yes/no | geneSeed yes/no | armouryData yes/no | success/fail'
-      );
+      return message.reply('Usage: !ancientreport @user | operation | overseer rank | class | difficulty | squad1,squad2,squad3 | noDowns yes/no | geneSeed yes/no | armouryData yes/no | success/fail');
     }
 
     const raw = message.content.replace('!ancientreport', '').trim();
@@ -4290,33 +3645,16 @@ return message.reply({
     const parts = withoutMention.split('|').map(part => part.trim());
 
     if (parts.length < 9) {
-      return message.reply(
-        'Usage: !ancientreport @user | operation | overseer rank | class | difficulty | squad1,squad2,squad3 | noDowns yes/no | geneSeed yes/no | armouryData yes/no | success/fail'
-      );
+      return message.reply('Usage: !ancientreport @user | operation | overseer rank | class | difficulty | squad1,squad2,squad3 | noDowns yes/no | geneSeed yes/no | armouryData yes/no | success/fail');
     }
 
-    const [
-      operation,
-      overseerRank,
-      classUsed,
-      difficulty,
-      squadRaw,
-      noDownsText,
-      geneSeedText,
-      armouryDataText,
-      successText
-    ] = parts;
+    const [operation, overseerRank, classUsed, difficulty, squadRaw, noDownsText, geneSeedText, armouryDataText, successText] = parts;
 
     const normalizedOperation =
-      operation.toLowerCase() === 'inferno'
-        ? 'Inferno'
-        : operation.toLowerCase() === 'decapitation'
-          ? 'Decapitation'
-          : null;
+      operation.toLowerCase() === 'inferno' ? 'Inferno' :
+      operation.toLowerCase() === 'decapitation' ? 'Decapitation' : null;
 
-    if (!normalizedOperation) {
-      return message.reply('⚠️ Operation must be Inferno or Decapitation.');
-    }
+    if (!normalizedOperation) return message.reply('⚠️ Operation must be Inferno or Decapitation.');
 
     const noDowns = parseYesNo(noDownsText);
     const geneSeed = parseYesNo(geneSeedText);
@@ -4334,10 +3672,7 @@ return message.reply({
       classUsed.toLowerCase() === 'bulwark' &&
       difficulty.toLowerCase() === 'lethal' &&
       squad.length > 0 &&
-      noDowns === true &&
-      geneSeed === true &&
-      armouryData === true &&
-      success === true;
+      noDowns === true && geneSeed === true && armouryData === true && success === true;
 
     if (!operationPassed) {
       const cooldownUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
@@ -4354,14 +3689,7 @@ return message.reply({
             operations: {
               ...current.trialData.ancient.operations,
               [normalizedOperation]: {
-                overseerRank,
-                classUsed,
-                difficulty,
-                squad,
-                noDowns,
-                geneSeed,
-                armouryData,
-                success,
+                overseerRank, classUsed, difficulty, squad, noDowns, geneSeed, armouryData, success,
                 submittedAt: new Date().toISOString()
               }
             }
@@ -4385,14 +3713,7 @@ return message.reply({
           operations: {
             ...current.trialData.ancient.operations,
             [normalizedOperation]: {
-              overseerRank,
-              classUsed,
-              difficulty,
-              squad,
-              noDowns,
-              geneSeed,
-              armouryData,
-              success,
+              overseerRank, classUsed, difficulty, squad, noDowns, geneSeed, armouryData, success,
               submittedAt: new Date().toISOString()
             }
           }
@@ -4455,125 +3776,97 @@ return message.reply({
     );
   }
 
-  // ================= RESET / TEST COMMANDS =================
   if (message.content.startsWith('!resetprogression')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may reset progression state.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Progression resets may only be issued in the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-
-    if (!target) {
-      return message.reply('Usage: !resetprogression @user');
-    }
+    if (!target) return message.reply('Usage: !resetprogression @user');
 
     resetProgressionChoiceState(target.id);
-
     return message.reply(
       `✅ ${target} progression-path state has been reset.\n` +
       `They may trigger the Fireteam threshold flow again when appropriate.`
     );
   }
 
-   if (message.content.startsWith('!sendpathprompt')) {
+  if (message.content.startsWith('!sendpathprompt')) {
     if (!hasCommandAuthority(message.member)) {
       return message.reply('⚠️ Only High Command, Captains, or Lieutenants may send path prompts.');
     }
-
     if (message.channel.id !== HIGH_COMMAND_CHANNEL_ID) {
       return message.reply('⚠️ Path prompts may only be issued from the High Command channel.');
     }
 
     const target = message.mentions.members.first();
-
-    if (!target) {
-      return message.reply('Usage: !sendpathprompt @user');
-    }
+    if (!target) return message.reply('Usage: !sendpathprompt @user');
 
     const points = getUserXP(target.id);
-
     await sendFireteamChoicePrompt(message.guild, target, points);
+    return message.reply(`✅ Fireteam progression path prompt has been sent to ${target}.`);
+  }
+
+  if (message.content === '!specialtypanel') {
+    if (!hasCommandAuthority(message.member)) {
+      return message.reply('⚠️ High Command only.');
+    }
+    if (message.channel.id !== SPECIALTY_CONFIG.channelId) {
+      return message.reply('⚠️ This panel may only be deployed in the specialty channel.');
+    }
+
+    const row = new ActionRowBuilder().addComponents(
+      SPECIALTY_CONFIG.specialties.map(spec =>
+        new ButtonBuilder()
+          .setCustomId(spec.buttonId)
+          .setLabel(spec.label)
+          .setStyle(ButtonStyle.Primary)
+      )
+    );
+
+    const panelMessage = await message.channel.send({
+      content:
+        '**⚔️ Select Your Specialty Path ⚔️**\n\n' +
+        'Only **Sergeants and above** may apply.\n' +
+        'All applications are reviewed by High Command.',
+      components: [row]
+    });
+
+    try {
+      await panelMessage.pin();
+    } catch (err) {
+      console.error('Failed to pin specialty panel:', err);
+    }
+
+    return message.reply('✅ Specialty panel deployed and pinned.');
+  }
+
+  if (message.content.startsWith('!adjustxp')) {
+    if (!hasCommandAuthority(message.member)) {
+      return message.reply('⚠️ You are not authorized to adjust progression points.');
+    }
+
+    const args = message.content.split(' ');
+    const target = message.mentions.members.first();
+    const amount = parseFloat(args[2]);
+
+    if (!target || isNaN(amount)) {
+      return message.reply('⚠️ Usage: `!adjustxp @user amount`');
+    }
+
+    const oldXP = getUserXP(target.id);
+    const newXP = addUserXP(target.id, amount);
+
+    await handleRankThresholdChange(message.guild, target, getRank(oldXP).name, oldXP, newXP);
 
     return message.reply(
-      `✅ Fireteam progression path prompt has been sent to ${target}.`
+      `⚙️ Adjusted ${target}'s progression by ${amount} points.\n` +
+      `New Total: ${newXP}`
     );
   }
-
-if (message.content === '!specialtypanel') {
-  if (!hasCommandAuthority(message.member)) {
-    return message.reply('⚠️ High Command only.');
-  }
-
-  if (message.channel.id !== SPECIALTY_CONFIG.channelId) {
-    return message.reply('⚠️ This panel may only be deployed in the specialty channel.');
-  }
-
-  const row = new ActionRowBuilder().addComponents(
-    SPECIALTY_CONFIG.specialties.map(spec =>
-      new ButtonBuilder()
-        .setCustomId(spec.buttonId)
-        .setLabel(spec.label)
-        .setStyle(ButtonStyle.Primary)
-    )
-  );
-
-  const panelMessage = await message.channel.send({
-    content:
-      '**⚔️ Select Your Specialty Path ⚔️**\n\n' +
-      'Only **Sergeants and above** may apply.\n' +
-      'All applications are reviewed by High Command.',
-    components: [row]
-  });
-
-  try {
-    await panelMessage.pin();
-  } catch (err) {
-    console.error('Failed to pin specialty panel:', err);
-  }
-
-  return message.reply('✅ Specialty panel deployed and pinned.');
-}
-
-// ================= XP ADJUSTMENT =================
-if (message.content.startsWith('!adjustxp')) {
-
-  if (!hasCommandAuthority(message.member)) {
-    return message.reply('⚠️ You are not authorized to adjust progression points.');
-  }
-
-  const args = message.content.split(' ');
-  const target = message.mentions.members.first();
-  const amount = parseFloat(args[2]);
-
-  if (!target || isNaN(amount)) {
-    return message.reply(
-      '⚠️ Usage: `!adjustxp @user amount`'
-    );
-  }
-
-  const oldXP = getUserXP(target.id);
-  const newXP = addUserXP(target.id, amount);
-
-  await handleRankThresholdChange(
-    message.guild,
-    target,
-    getRank(oldXP).name,
-    oldXP,
-    newXP
-  );
-
-  return message.reply(
-    `⚙️ Adjusted ${target}'s progression by ${amount} points.\n` +
-    `New Total: ${newXP}`
-  );
-}
-
-}
-
 });
 
 client.login(process.env.TOKEN);
